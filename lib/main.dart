@@ -9,10 +9,11 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        body: Center(
+        backgroundColor: Colors.amber[300],
+        body: const Center(
           child: Text(
             'Campus Connect',
             style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold),
