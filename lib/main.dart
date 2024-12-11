@@ -1,3 +1,4 @@
+import 'package:campus_connect/Pages/login_page.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -9,17 +10,9 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        backgroundColor: Colors.amber[300],
-        body: const Center(
-          child: Text(
-            'Campus Connect',
-            style: TextStyle(fontSize: 34, fontWeight: FontWeight.bold),
-          ),
-        ),
-      ),
+      home: LoginPage()
     );
   }
 }
