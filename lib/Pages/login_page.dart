@@ -16,6 +16,7 @@ class LoginPage extends StatelessWidget {
         ),
         SafeArea(
           child: Scaffold(
+            resizeToAvoidBottomInset: false,
             backgroundColor: Colors.transparent,
             body: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -31,7 +32,72 @@ class LoginPage extends StatelessWidget {
                     fit: BoxFit.cover,
                   ),
                 ),
-                EmailComponent()
+                const EmailComponent(),
+                Opacity(
+                  opacity: 0.3,
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 25, left: 20, right: 20),
+                    height: 2,
+                    color: Colors.black,
+                    width: MediaQuery.of(context).size.width,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () {},
+                  child: Container(
+                    margin: const EdgeInsets.only(left: 30, top: 60, right: 30),
+                    alignment: Alignment.center,
+                    width: MediaQuery.of(context).size.width,
+                    height: 55,
+                    decoration: BoxDecoration(
+                        border: Border.all(color: Colors.black, width: 2),
+                        borderRadius: BorderRadius.circular(30)),
+                    child: Flex(
+                        direction: Axis.horizontal,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          const SizedBox(
+                            width: 10,
+                          ),
+                          Image.asset(
+                            'lib/Assets/Icons/Google.png',
+                            width: 35,
+                            height: 35,
+                            fit: BoxFit.cover,
+                          ),
+                          const SizedBox(
+                            width: 30,
+                          ),
+                          const Text(
+                            "Sign in With Google",
+                            style: TextStyle(fontSize: 25),
+                          ),
+                        ]),
+                  ),
+                ),
+                const SizedBox(
+                  height: 15,
+                ),
+                Flex(
+                  direction: Axis.horizontal,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      "Need an account?",
+                      style: TextStyle(fontSize: 24),
+                    ),
+                    const SizedBox(
+                      width: 10,
+                    ),
+                    GestureDetector(
+                        onTap: () => {},
+                        child: const Text(
+                          "Sign up",
+                          style: TextStyle(fontSize: 20),
+                        ))
+                  ],
+                ),
               ],
             ),
           ),

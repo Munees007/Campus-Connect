@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "478391183627",
+    "project_id": "campus-connect-5ef22",
+    "storage_bucket": "campus-connect-5ef22.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:478391183627:android:811e61a03ee1da2273da0e",
+        "android_client_info": {
+          "package_name": "com.munees.campus_connect"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBXe2BXL9wXp2CRWzmMlOVB6H4LHuPr3bU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
