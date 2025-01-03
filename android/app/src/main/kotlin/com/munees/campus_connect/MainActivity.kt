@@ -1,4 +1,4 @@
-package com.example.campus_connect
+package com.munees.campus_connect
 
 import io.flutter.embedding.android.FlutterActivity
 

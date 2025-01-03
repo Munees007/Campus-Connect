@@ -1,5 +1,5 @@
-import 'package:campus_connect/Components/input_component.dart';
 import 'package:flutter/material.dart';
+import 'input_component.dart';
 
 class EmailComponent extends StatelessWidget {
   const EmailComponent({super.key});
@@ -8,8 +8,8 @@ class EmailComponent extends StatelessWidget {
   Widget build(BuildContext context) {
     TextEditingController email = TextEditingController();
     TextEditingController pass = TextEditingController();
-    return Flex(
-      direction: Axis.vertical,
+
+    return Column(
       children: [
         InputComponent(
           hint: "Email",
@@ -31,17 +31,18 @@ class EmailComponent extends StatelessWidget {
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 80, vertical: 10),
             alignment: Alignment.center,
-            width: MediaQuery.of(context).size.width,
-            height: 60,
+            width: double.infinity,
+            constraints: const BoxConstraints(maxHeight: 60),
             decoration: BoxDecoration(
-                border: Border.all(color: Colors.black, width: 2),
-                borderRadius: BorderRadius.circular(30)),
+              border: Border.all(color: Colors.black, width: 2),
+              borderRadius: BorderRadius.circular(30),
+            ),
             child: const Text(
               "LOGIN",
-              style: TextStyle(fontSize: 30),
+              style: TextStyle(fontSize: 25),
             ),
           ),
-        )
+        ),
       ],
     );
   }
