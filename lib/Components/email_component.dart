@@ -1,3 +1,4 @@
+import 'package:campus_connect/Backend/Add/text_db.dart';
 import 'package:flutter/material.dart';
 import 'input_component.dart';
 
@@ -25,6 +26,7 @@ class EmailComponent extends StatelessWidget {
         ),
         GestureDetector(
           onTap: () {
+            Textdb().setName();
             print("Email = ${email.text}");
             print("Pass = ${pass.text}");
           },
