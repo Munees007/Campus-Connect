@@ -1,19 +1,35 @@
 import 'package:campus_connect/Backend/Add/text_db.dart';
+import 'package:campus_connect/Components/drop_down.dart';
+import 'package:campus_connect/Components/toast_message.dart';
 import 'package:flutter/material.dart';
 import 'input_component.dart';
 
-class EmailComponent extends StatelessWidget {
+class EmailComponent extends StatefulWidget {
   const EmailComponent({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    TextEditingController email = TextEditingController();
-    TextEditingController pass = TextEditingController();
+  State<EmailComponent> createState() => _EmailComponentState();
+}
 
+class _EmailComponentState extends State<EmailComponent> {
+  TextEditingController email = TextEditingController();
+  TextEditingController pass = TextEditingController();
+  String role = "Student";
+  @override
+  Widget build(BuildContext context) {
     return Column(
       children: [
+        CustomDropdown(
+            value: role,
+            onChanged: (value) {
+              setState(() {
+                role = value!;
+              });
+            },
+            options: const ["Student", "Staff"],
+            hintText: "Select Role"),
         InputComponent(
-          hint: "Email",
+          hint: role == "Student" ? "Roll Number" : "Staff ID",
           preficIconPath: "lib/Assets/Icons/Mail.png",
           isPassword: false,
           controller: email,
@@ -26,6 +42,8 @@ class EmailComponent extends StatelessWidget {
         ),
         GestureDetector(
           onTap: () {
+            ToastManager().showToast(
+                context: context, message: "hi", type: ToastType.info);
             Textdb().setName();
             print("Email = ${email.text}");
             print("Pass = ${pass.text}");
