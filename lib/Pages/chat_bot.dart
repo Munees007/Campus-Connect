@@ -25,6 +25,17 @@ class _ChatBotState extends State<ChatBot> {
   };
 
   Future<void> getChatbotResponse(String userInput) async {
+    setState(() {
+      // Show user's message immediately
+      _messages.add({'message': userInput, 'isUser': true});
+
+      // Show loading message for bot
+      _messages
+          .add({'message': 'loading...', 'isUser': false, 'isLoading': true});
+    });
+
+    _scrollToBottom();
+
     try {
       final response = await http.get(
         Uri.parse('https://chat-bot-backend-sooty.vercel.app/chatbot').replace(
@@ -41,20 +52,23 @@ class _ChatBotState extends State<ChatBot> {
         final responseText = botResponse['answer'] ?? 'No response available';
 
         setState(() {
-          _messages.add({'message': userInput, 'isUser': true});
+          // Remove the loading indicator
+          _messages.removeLast();
+          // Add the actual bot response
           _messages.add({'message': responseText, 'isUser': false});
         });
-        _scrollToBottom();
       }
     } catch (e) {
       setState(() {
-        _messages.add({'message': userInput, 'isUser': true});
+        _messages.removeLast();
         _messages.add({
           'message': 'Sorry, there was an error processing your request.',
           'isUser': false
         });
       });
     }
+
+    _scrollToBottom();
   }
 
   void _scrollToBottom() {
