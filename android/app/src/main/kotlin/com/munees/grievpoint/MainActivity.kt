@@ -1,4 +1,4 @@
-package com.munees.campus_connect
+package com.munees.grievpoint
 
 import io.flutter.embedding.android.FlutterActivity
 

@@ -8,9 +8,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:478391183627:android:811e61a03ee1da2273da0e",
+        "mobilesdk_app_id": "1:478391183627:android:cd11a41dfd73aff573da0e",
         "android_client_info": {
-          "package_name": "com.munees.campus_connect"
+          "package_name": "com.munees.grievpoint"
         }
       },
       "oauth_client": [],

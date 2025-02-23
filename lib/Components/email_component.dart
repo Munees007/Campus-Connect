@@ -1,4 +1,4 @@
-import 'package:campus_connect/Backend/Add/text_db.dart';
+import 'package:campus_connect/Backend/Add/manage_users.dart';
 import 'package:campus_connect/Components/drop_down.dart';
 import 'package:campus_connect/Components/toast_message.dart';
 import 'package:flutter/material.dart';
@@ -42,11 +42,11 @@ class _EmailComponentState extends State<EmailComponent> {
         ),
         GestureDetector(
           onTap: () {
+            loginUser(email.text, pass.text, role.toLowerCase(), context);
             ToastManager().showToast(
-                context: context, message: "hi", type: ToastType.info);
-            Textdb().setName();
-            print("Email = ${email.text}");
-            print("Pass = ${pass.text}");
+                context: context,
+                message: "Login SuccessFull",
+                type: ToastType.info);
           },
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 80, vertical: 10),

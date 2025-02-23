@@ -18,7 +18,7 @@ class ToastManager {
     required String message,
     required ToastType type,
     Duration duration = const Duration(seconds: 3),
-    ToastPosition position = ToastPosition.bottom,
+    ToastPosition position = ToastPosition.top,
   }) {
     Color backgroundColor;
     IconData icon;

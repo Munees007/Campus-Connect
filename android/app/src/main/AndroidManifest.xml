@@ -1,8 +1,8 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.munees.campus_connect">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.munees.grievpoint">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <application
-        android:label="campus_connect"
+        android:label="grievpoint"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

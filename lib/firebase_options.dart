@@ -46,33 +46,37 @@ class DefaultFirebaseOptions {
     messagingSenderId: '478391183627',
     projectId: 'campus-connect-5ef22',
     authDomain: 'campus-connect-5ef22.firebaseapp.com',
+    databaseURL: 'https://campus-connect-5ef22-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'campus-connect-5ef22.firebasestorage.app',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyBXe2BXL9wXp2CRWzmMlOVB6H4LHuPr3bU',
-    appId: '1:478391183627:android:811e61a03ee1da2273da0e',
+    appId: '1:478391183627:android:cd11a41dfd73aff573da0e',
     messagingSenderId: '478391183627',
     projectId: 'campus-connect-5ef22',
+    databaseURL: 'https://campus-connect-5ef22-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'campus-connect-5ef22.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyB1SHNMLVO9hk_FhsS2IMD-BWXW8_E4HBw',
-    appId: '1:478391183627:ios:c2e99faf64c1a11873da0e',
+    appId: '1:478391183627:ios:53b6bac82cc7f83a73da0e',
     messagingSenderId: '478391183627',
     projectId: 'campus-connect-5ef22',
+    databaseURL: 'https://campus-connect-5ef22-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'campus-connect-5ef22.firebasestorage.app',
-    iosBundleId: 'com.example.campusConnect',
+    iosBundleId: 'com.munees.grievpoint',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyB1SHNMLVO9hk_FhsS2IMD-BWXW8_E4HBw',
-    appId: '1:478391183627:ios:c2e99faf64c1a11873da0e',
+    appId: '1:478391183627:ios:53b6bac82cc7f83a73da0e',
     messagingSenderId: '478391183627',
     projectId: 'campus-connect-5ef22',
+    databaseURL: 'https://campus-connect-5ef22-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'campus-connect-5ef22.firebasestorage.app',
-    iosBundleId: 'com.example.campusConnect',
+    iosBundleId: 'com.munees.grievpoint',
   );
 
   static const FirebaseOptions windows = FirebaseOptions(
@@ -81,6 +85,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '478391183627',
     projectId: 'campus-connect-5ef22',
     authDomain: 'campus-connect-5ef22.firebaseapp.com',
+    databaseURL: 'https://campus-connect-5ef22-default-rtdb.asia-southeast1.firebasedatabase.app',
     storageBucket: 'campus-connect-5ef22.firebasestorage.app',
   );
 }
