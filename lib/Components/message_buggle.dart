@@ -27,12 +27,16 @@ class _MessageBubbleState extends State<MessageBubble> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 if (!widget.isUser) ...[
-                  Image.asset(
-                    "lib/Assets/Images/Chatbot.png",
-                    height: 28,
-                    width: 28,
+                  Container(
+                    height: 40, // Increased container height
+                    width: 40, // Increased container width
+                    child: Image.asset(
+                      "lib/Assets/Images/Chatbot.png",
+                      fit: BoxFit
+                          .contain, // This ensures the image fits properly
+                    ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 12), // Increased spacing
                 ],
                 Text(
                   widget.isUser ? "You" : "Ayyan Bot",
@@ -42,11 +46,15 @@ class _MessageBubbleState extends State<MessageBubble> {
                   ),
                 ),
                 if (widget.isUser) ...[
-                  const SizedBox(width: 8),
-                  Image.asset(
-                    "lib/Assets/Images/Chatbot.png",
-                    height: 28,
-                    width: 28,
+                  const SizedBox(width: 12), // Increased spacing
+                  Container(
+                    height: 40, // Increased container height
+                    width: 40, // Increased container width
+                    child: Image.asset(
+                      "lib/Assets/Images/Boy.png",
+                      fit: BoxFit
+                          .contain, // This ensures the image fits properly
+                    ),
                   ),
                 ],
               ],
