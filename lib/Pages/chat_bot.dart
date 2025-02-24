@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:campus_connect/Components/message_buggle.dart';
 import 'package:campus_connect/colors/chat_bot_colors.dart';
 import 'package:flutter/material.dart';
@@ -28,8 +30,17 @@ class _ChatBotState extends State<ChatBot> {
   void initState() {
     // TODO: implement initState
     super.initState();
+    List<String> welcomeMessages = [
+    'How can I help you?',
+    'Welcome! How can I assist you today?',
+    'Hi there! What can I do for you?',
+    'Hello! Need any help?',
+    'Greetings! How may I support you?'
+  ];
+  var random = Random();
+  String randomMessage = welcomeMessages[random.nextInt(welcomeMessages.length)];
 
-    _messages.add({'message': 'How can I help you?', 'isUser': false});
+    _messages.add({'message': randomMessage, 'isUser': false});
   }
 
   Future<void> getChatbotResponse(String userInput) async {
@@ -95,7 +106,7 @@ class _ChatBotState extends State<ChatBot> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
 
-    String backgroundImagePath = screenWidth > 600 ? "lib/Assets/Image/chatbotbg.jpg" : "lib/Assets/Image/chat_bg.jpg";
+    String backgroundImagePath = screenWidth > 600 ? "lib/Assets/Images/chatbotbg.jpg" : "lib/Assets/Images/chat_bg.jpg";
     return Scaffold(
       appBar: AppBar(
         leading: Image.asset(
