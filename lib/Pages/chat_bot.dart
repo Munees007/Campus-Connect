@@ -24,6 +24,14 @@ class _ChatBotState extends State<ChatBot> {
     'te': 'తెలుగు',
   };
 
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    _messages.add({'message': 'How can I help you?', 'isUser': false});
+  }
+
   Future<void> getChatbotResponse(String userInput) async {
     setState(() {
       // Show user's message immediately
@@ -85,6 +93,9 @@ class _ChatBotState extends State<ChatBot> {
 
   @override
   Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+
+    String backgroundImagePath = screenWidth > 600 ? "lib/Assets/Image/chatbotbg.jpg" : "lib/Assets/Image/chat_bg.jpg";
     return Scaffold(
       appBar: AppBar(
         leading: Image.asset(
@@ -110,7 +121,7 @@ class _ChatBotState extends State<ChatBot> {
               child: Opacity(
                 opacity: 0.5,
                 child: Image.asset(
-                  "lib/Assets/Images/chat_bg.jpg",
+                  backgroundImagePath,
                   fit: BoxFit.cover,
                 ),
               ),
@@ -156,7 +167,7 @@ class _ChatBotState extends State<ChatBot> {
                             context: context,
                             builder: (BuildContext context) {
                               return AlertDialog(
-                                title: Text('Select Language'),
+                                title: const Text('Select Language'),
                                 content: SingleChildScrollView(
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
@@ -178,11 +189,11 @@ class _ChatBotState extends State<ChatBot> {
                           );
                         },
                         backgroundColor: chatBotAppBarColor,
-                        child: Text(
-                          selectedLanguage,
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 20),
-                        ),
+                        child: SizedBox(
+                      height: 40,
+                      width: 40,
+                      child: Image.asset("lib/Assets/Images/Language.png"),
+                    ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -203,7 +214,7 @@ class _ChatBotState extends State<ChatBot> {
                               border: OutlineInputBorder(
                                 borderSide: BorderSide.none,
                               ),
-                              contentPadding: const EdgeInsets.symmetric(
+                              contentPadding: EdgeInsets.symmetric(
                                 horizontal: 20,
                                 vertical: 10,
                               ),

@@ -54,10 +54,10 @@ class _MessageBubbleState extends State<MessageBubble>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (!widget.isUser) ...[
-                    Container(
+                    SizedBox(
                       height: 40,
                       width: 40,
-                      child: Image.asset("lib/Assets/Images/Chatbot.png"),
+                      child: Image.asset("lib/Assets/Images/Aj.png"),
                     ),
                     const SizedBox(width: 12),
                   ],
@@ -70,7 +70,7 @@ class _MessageBubbleState extends State<MessageBubble>
                   ),
                   if (widget.isUser) ...[
                     const SizedBox(width: 12),
-                    Container(
+                    SizedBox(
                       height: 40,
                       width: 40,
                       child: Image.asset("lib/Assets/Images/Boy.png"),
@@ -124,12 +124,12 @@ class _MessageBubbleState extends State<MessageBubble>
   Widget _buildLoadingDot({int delay = 0}) {
     return AnimatedOpacity(
       opacity: 1.0,
-      duration: Duration(milliseconds: 600),
+      duration: const Duration(milliseconds: 600),
       curve: Curves.easeInOut,
       child: Container(
         width: 8,
         height: 8,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           color: Colors.white,
           shape: BoxShape.circle,
         ),
