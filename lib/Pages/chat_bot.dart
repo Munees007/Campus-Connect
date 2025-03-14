@@ -18,6 +18,8 @@ class _ChatBotState extends State<ChatBot> {
   final List<Map<String, dynamic>> _messages = [];
   final ScrollController _scrollController = ScrollController();
   String selectedLanguage = 'en';
+  late Map<String, dynamic> reference;
+  bool _hasValue = false;
   Map<String, String> languageMap = {
     'en': 'English',
     'ta': 'தமிழ்',
@@ -31,14 +33,15 @@ class _ChatBotState extends State<ChatBot> {
     // TODO: implement initState
     super.initState();
     List<String> welcomeMessages = [
-    'How can I help you?',
-    'Welcome! How can I assist you today?',
-    'Hi there! What can I do for you?',
-    'Hello! Need any help?',
-    'Greetings! How may I support you?'
-  ];
-  var random = Random();
-  String randomMessage = welcomeMessages[random.nextInt(welcomeMessages.length)];
+      'How can I help you?',
+      'Welcome! How can I assist you today?',
+      'Hi there! What can I do for you?',
+      'Hello! Need any help?',
+      'Greetings! How may I support you?'
+    ];
+    var random = Random();
+    String randomMessage =
+        welcomeMessages[random.nextInt(welcomeMessages.length)];
 
     _messages.add({'message': randomMessage, 'isUser': false});
   }
@@ -69,12 +72,20 @@ class _ChatBotState extends State<ChatBot> {
         final jsonString = utf8.decode(response.bodyBytes);
         final botResponse = json.decode(jsonString);
         final responseText = botResponse['answer'] ?? 'No response available';
+        final hasValue = botResponse['hasValue'];
 
         setState(() {
           // Remove the loading indicator
           _messages.removeLast();
           // Add the actual bot response
           _messages.add({'message': responseText, 'isUser': false});
+
+          if (hasValue) {
+            reference = botResponse['reference'];
+            _hasValue = true;
+          } else {
+            _hasValue = false;
+          }
         });
       }
     } catch (e) {
@@ -106,7 +117,9 @@ class _ChatBotState extends State<ChatBot> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
 
-    String backgroundImagePath = screenWidth > 600 ? "lib/Assets/Images/chatbotbg.jpg" : "lib/Assets/Images/chat_bg.jpg";
+    String backgroundImagePath = screenWidth > 600
+        ? "lib/Assets/Images/chatbotbg.jpg"
+        : "lib/Assets/Images/chat_bg.jpg";
     return Scaffold(
       appBar: AppBar(
         leading: Image.asset(
@@ -201,10 +214,10 @@ class _ChatBotState extends State<ChatBot> {
                         },
                         backgroundColor: chatBotAppBarColor,
                         child: SizedBox(
-                      height: 40,
-                      width: 40,
-                      child: Image.asset("lib/Assets/Images/Language.png"),
-                    ),
+                          height: 40,
+                          width: 40,
+                          child: Image.asset("lib/Assets/Images/Language.png"),
+                        ),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -255,6 +268,62 @@ class _ChatBotState extends State<ChatBot> {
                 )
               ],
             ),
+            _hasValue
+                ? Positioned(
+                    right: 16,
+                    bottom: 100, // Adjust position above the text input
+                    child: Container(
+                      alignment: Alignment.bottomRight,
+                      width: 180,
+                      child: Column(
+                        children: [
+                          // Close Icon at the top of the suggestions
+                          IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _hasValue = false; // Close the suggestion list
+                              });
+                            },
+                            icon: const Icon(Icons.close, color: Colors.black),
+                          ),
+                          // Suggestions list with spacing between items
+                          Container(
+                            height:
+                                250, // Constrain the height of the suggestion list
+                            child: ListView.builder(
+                              shrinkWrap: true, // Prevent list from overflowing
+                              itemCount: reference.length,
+                              itemBuilder: (context, key) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(
+                                      bottom: 8.0), // Add spacing between items
+                                  child: FloatingActionButton(
+                                    onPressed: () async {
+                                      await getChatbotResponse(
+                                          reference.values.elementAt(key));
+                                      setState(() {
+                                        _hasValue =
+                                            false; // Hide the suggestions once selected
+                                      });
+                                    },
+                                    backgroundColor: chatBotAppBarColor,
+                                    child: Text(
+                                      reference.keys.elementAt(key),
+                                      style: const TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                : SizedBox(),
           ],
         ),
       ),

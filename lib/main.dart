@@ -1,4 +1,5 @@
 import 'package:campus_connect/Pages/chat_bot.dart';
+import 'package:campus_connect/Pages/home_page.dart';
 import 'package:campus_connect/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
