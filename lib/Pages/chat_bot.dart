@@ -78,14 +78,13 @@ class _ChatBotState extends State<ChatBot> {
           // Remove the loading indicator
           _messages.removeLast();
           // Add the actual bot response
-          _messages.add({'message': responseText, 'isUser': false});
-
-          if (hasValue) {
-            reference = botResponse['reference'];
-            _hasValue = true;
-          } else {
-            _hasValue = false;
-          }
+          reference = botResponse['reference'];
+          _hasValue = hasValue;
+          _messages.add({
+            'message': responseText,
+            'isUser': false,
+            'showReference': _hasValue
+          });
         });
       }
     } catch (e) {
@@ -158,9 +157,61 @@ class _ChatBotState extends State<ChatBot> {
                     padding: const EdgeInsets.all(10),
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
-                      return MessageBubble(
-                        message: _messages[index]['message'],
-                        isUser: _messages[index]['isUser'],
+                      bool showReference =
+                          _messages[index]['showReference'] ?? false;
+                      return Column(
+                        children: [
+                          MessageBubble(
+                            message: _messages[index]['message'],
+                            isUser: _messages[index]['isUser'],
+                          ),
+                          if(showReference)
+                          Container(
+                            width: 180,
+                            child: Column(
+                              children: [
+                                // Close Icon at the top of the suggestions
+                                IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      showReference = false; // Close the suggestion list
+                                    });
+                                  },
+                                  icon: const Icon(Icons.close, color: Colors.black),
+                                ),
+                                // Suggestions list with spacing between items
+                                ListView.builder(
+                                  shrinkWrap: true, // Prevent list from overflowing
+                                  itemCount: reference.length,
+                                  itemBuilder: (context, key) {
+                                    return Padding(
+                                      padding: const EdgeInsets.only(
+                                          bottom: 5.0), // Add spacing between items
+                                      child: FloatingActionButton(
+                                        onPressed: () async {
+                                          await getChatbotResponse(
+                                              reference.values.elementAt(key));
+                                          setState(() {
+                                            _hasValue =
+                                                false; // Hide the suggestions once selected
+                                          });
+                                        },
+                                        backgroundColor: chatBotAppBarColor,
+                                        child: Text(
+                                          reference.keys.elementAt(key),
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
                       );
                     },
                   ),
@@ -268,62 +319,6 @@ class _ChatBotState extends State<ChatBot> {
                 )
               ],
             ),
-            _hasValue
-                ? Positioned(
-                    right: 16,
-                    bottom: 100, // Adjust position above the text input
-                    child: Container(
-                      alignment: Alignment.bottomRight,
-                      width: 180,
-                      child: Column(
-                        children: [
-                          // Close Icon at the top of the suggestions
-                          IconButton(
-                            onPressed: () {
-                              setState(() {
-                                _hasValue = false; // Close the suggestion list
-                              });
-                            },
-                            icon: const Icon(Icons.close, color: Colors.black),
-                          ),
-                          // Suggestions list with spacing between items
-                          Container(
-                            height:
-                                250, // Constrain the height of the suggestion list
-                            child: ListView.builder(
-                              shrinkWrap: true, // Prevent list from overflowing
-                              itemCount: reference.length,
-                              itemBuilder: (context, key) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(
-                                      bottom: 8.0), // Add spacing between items
-                                  child: FloatingActionButton(
-                                    onPressed: () async {
-                                      await getChatbotResponse(
-                                          reference.values.elementAt(key));
-                                      setState(() {
-                                        _hasValue =
-                                            false; // Hide the suggestions once selected
-                                      });
-                                    },
-                                    backgroundColor: chatBotAppBarColor,
-                                    child: Text(
-                                      reference.keys.elementAt(key),
-                                      style: const TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : SizedBox(),
           ],
         ),
       ),

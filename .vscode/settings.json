@@ -1,4 +1,6 @@
 {
     "java.configuration.updateBuildConfiguration": "automatic",
-    "cmake.sourceDirectory": "F:/final_year_project/campus_connect/windows/runner"
+    "cmake.sourceDirectory": "F:/final_year_project/campus_connect/windows/runner",
+    "IDX.aI.enableInlineCompletion": true,
+    "IDX.aI.enableCodebaseIndexing": true
 }
