@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:campus_connect/Components/message_buggle.dart';
-import 'package:campus_connect/colors/chat_bot_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -18,8 +17,8 @@ class _ChatBotState extends State<ChatBot> {
   final List<Map<String, dynamic>> _messages = [];
   final ScrollController _scrollController = ScrollController();
   String selectedLanguage = 'en';
-  late Map<String, dynamic> reference;
-  bool _hasValue = false;
+  Map<String, dynamic>? _currentSuggestions;
+  bool _showSuggestions = false;
   Map<String, String> languageMap = {
     'en': 'English',
     'ta': 'தமிழ்',
@@ -30,7 +29,6 @@ class _ChatBotState extends State<ChatBot> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     List<String> welcomeMessages = [
       'How can I help you?',
@@ -78,13 +76,16 @@ class _ChatBotState extends State<ChatBot> {
           // Remove the loading indicator
           _messages.removeLast();
           // Add the actual bot response
-          reference = botResponse['reference'];
-          _hasValue = hasValue;
           _messages.add({
             'message': responseText,
             'isUser': false,
-            'showReference': _hasValue
           });
+
+          // Update suggestions if available
+          if (hasValue) {
+            _currentSuggestions = botResponse['reference'];
+            _showSuggestions = true;
+          }
         });
       }
     } catch (e) {
@@ -114,213 +115,256 @@ class _ChatBotState extends State<ChatBot> {
 
   @override
   Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
+    // Get the bottom padding to account for the navigation bar
+    final bottomPadding = MediaQuery.of(context).padding.bottom;
 
-    String backgroundImagePath = screenWidth > 600
-        ? "lib/Assets/Images/chatbotbg.jpg"
-        : "lib/Assets/Images/chat_bg.jpg";
-    return Scaffold(
-      appBar: AppBar(
-        leading: Image.asset(
-          "lib/Assets/Images/Chatbot.png",
-          height: 40,
-          width: 40,
-        ),
-        backgroundColor: chatBotAppBarColor,
-        title: const Text(
-          "Ayyan Bot",
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 26,
-            fontFamily: "Inter",
-            fontWeight: FontWeight.bold,
-          ),
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color(0xFF1E1E2C), Color(0xFF23233A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
       ),
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Opacity(
-                opacity: 0.5,
-                child: Image.asset(
-                  backgroundImagePath,
-                  fit: BoxFit.cover,
-                ),
-              ),
+      child: Column(
+        children: [
+          Expanded(
+            child: ListView.builder(
+              controller: _scrollController,
+              padding: const EdgeInsets.all(16),
+              itemCount: _messages.length,
+              itemBuilder: (context, index) {
+                return MessageBubble(
+                  message: _messages[index]['message'],
+                  isUser: _messages[index]['isUser'],
+                  isLoading: _messages[index]['isLoading'] ?? false,
+                );
+              },
             ),
-            Column(
+          ),
+
+          // Suggestions section
+          if (_showSuggestions && _currentSuggestions != null)
+            _buildSuggestionsSection(),
+
+          // Add padding at the bottom to account for the navigation bar
+          Padding(
+            padding: EdgeInsets.only(
+              left: 16.0,
+              right: 16.0,
+              top: 16.0,
+              bottom: 5 + bottomPadding, // Add extra padding for the navbar
+            ),
+            child: _buildChatInput(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSuggestionsSection() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 12, bottom: 8),
+            child: Row(
               children: [
-                Expanded(
-                  child: ListView.builder(
-                    controller: _scrollController,
-                    padding: const EdgeInsets.all(10),
-                    itemCount: _messages.length,
-                    itemBuilder: (context, index) {
-                      bool showReference =
-                          _messages[index]['showReference'] ?? false;
-                      return Column(
-                        children: [
-                          MessageBubble(
-                            message: _messages[index]['message'],
-                            isUser: _messages[index]['isUser'],
-                          ),
-                          if(showReference)
-                          Container(
-                            width: 180,
-                            child: Column(
-                              children: [
-                                // Close Icon at the top of the suggestions
-                                IconButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      showReference = false; // Close the suggestion list
-                                    });
-                                  },
-                                  icon: const Icon(Icons.close, color: Colors.black),
-                                ),
-                                // Suggestions list with spacing between items
-                                ListView.builder(
-                                  shrinkWrap: true, // Prevent list from overflowing
-                                  itemCount: reference.length,
-                                  itemBuilder: (context, key) {
-                                    return Padding(
-                                      padding: const EdgeInsets.only(
-                                          bottom: 5.0), // Add spacing between items
-                                      child: FloatingActionButton(
-                                        onPressed: () async {
-                                          await getChatbotResponse(
-                                              reference.values.elementAt(key));
-                                          setState(() {
-                                            _hasValue =
-                                                false; // Hide the suggestions once selected
-                                          });
-                                        },
-                                        backgroundColor: chatBotAppBarColor,
-                                        child: Text(
-                                          reference.keys.elementAt(key),
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                          )
-                        ],
-                      );
-                    },
+                Text(
+                  "Suggested Questions",
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.8),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
                   ),
                 ),
-                Container(
-                  height: 70, // Fixed height
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
+                const Spacer(),
+                IconButton(
+                  onPressed: () {
+                    setState(() {
+                      _showSuggestions = false;
+                    });
+                  },
+                  icon: Icon(
+                    Icons.close,
+                    color: Colors.white.withOpacity(0.6),
+                    size: 18,
                   ),
-                  decoration: BoxDecoration(
-                    color: chatBotAppBarColor,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.3),
-                        spreadRadius: 1,
-                        blurRadius: 5,
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      FloatingActionButton(
-                        elevation: 0,
-                        heroTag: "langButton",
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: const Text('Select Language'),
-                                content: SingleChildScrollView(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: languageMap.entries.map((entry) {
-                                      return ListTile(
-                                        title: Text(entry.value),
-                                        onTap: () {
-                                          setState(() {
-                                            selectedLanguage = entry.key;
-                                          });
-                                          Navigator.pop(context);
-                                        },
-                                      );
-                                    }).toList(),
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        },
-                        backgroundColor: chatBotAppBarColor,
-                        child: SizedBox(
-                          height: 40,
-                          width: 40,
-                          child: Image.asset("lib/Assets/Images/Language.png"),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Container(
-                          constraints: const BoxConstraints(
-                            maxHeight: 50, // Constrain TextField height
-                          ),
-                          child: TextField(
-                            controller: _messageController,
-                            cursorWidth: 3,
-                            cursorColor: Colors.white,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
-                            decoration: const InputDecoration(
-                              hintStyle: TextStyle(color: Colors.white),
-                              hintText: 'Type a message',
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide.none,
-                              ),
-                              contentPadding: EdgeInsets.symmetric(
-                                horizontal: 20,
-                                vertical: 10,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      FloatingActionButton(
-                        elevation: 0,
-                        heroTag: "sendButton",
-                        onPressed: () {
-                          if (_messageController.text.isNotEmpty) {
-                            getChatbotResponse(_messageController.text);
-                            _messageController.clear();
-                          }
-                        },
-                        backgroundColor: chatBotAppBarColor,
-                        child: const Icon(
-                          Icons.send,
-                          size: 35,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
               ],
             ),
-          ],
-        ),
+          ),
+          Container(
+            height: 44,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: _currentSuggestions!.length,
+              itemBuilder: (context, index) {
+                String key = _currentSuggestions!.keys.elementAt(index);
+                String value = _currentSuggestions!.values.elementAt(index);
+
+                return Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      getChatbotResponse(value);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueAccent.withOpacity(0.2),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 0,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                        side: BorderSide(
+                          color: Colors.blueAccent.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                    ),
+                    child: Text(
+                      key,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.white.withOpacity(0.9),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChatInput() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(25),
+        border: Border.all(color: Colors.white24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Material(
+            color: Colors.transparent,
+            child: IconButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return Dialog(
+                      backgroundColor: const Color(0xFF1E1E2C),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Text(
+                              'Select Language',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            ...languageMap.entries.map((entry) {
+                              return ListTile(
+                                title: Text(
+                                  entry.value,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                                tileColor: selectedLanguage == entry.key
+                                    ? Colors.blueAccent.withOpacity(0.2)
+                                    : Colors.transparent,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                onTap: () {
+                                  setState(() {
+                                    selectedLanguage = entry.key;
+                                  });
+                                  Navigator.pop(context);
+                                },
+                              );
+                            }).toList(),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+              icon: Icon(
+                Icons.language,
+                color: Colors.white.withOpacity(0.8),
+                size: 24,
+              ),
+            ),
+          ),
+          Expanded(
+            child: TextField(
+              controller: _messageController,
+              cursorColor: Colors.blueAccent,
+              style: const TextStyle(
+                color: Colors.white,
+              ),
+              decoration: InputDecoration(
+                hintText: 'Type a message...',
+                hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 10,
+                ),
+              ),
+              onSubmitted: (text) {
+                if (text.isNotEmpty) {
+                  getChatbotResponse(text);
+                  _messageController.clear();
+                }
+              },
+            ),
+          ),
+          Material(
+            color: Colors.transparent,
+            child: IconButton(
+              onPressed: () {
+                if (_messageController.text.isNotEmpty) {
+                  getChatbotResponse(_messageController.text);
+                  _messageController.clear();
+                }
+              },
+              icon: const Icon(
+                Icons.send_rounded,
+                color: Colors.blueAccent,
+                size: 24,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
