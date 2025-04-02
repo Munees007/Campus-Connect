@@ -1,3 +1,4 @@
+import 'package:campus_connect/Pages/admin_home_page.dart';
 import 'package:campus_connect/Pages/home_page.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -26,6 +27,13 @@ Future<void> loginUser(
             userData['password'] == password) {
           await Hive.box('UserBox').put("isLogin", true);
           await Hive.box('UserBox').put("userData", userData);
+          print(userData['staffId'] == "ADMIN");
+          if (userData['staffId'] == "ADMIN") {
+            Navigator.pushReplacement(context,
+                MaterialPageRoute(builder: (context) => const AdminHomePage()));
+            return;
+          }
+
           Navigator.pushReplacement(context,
               MaterialPageRoute(builder: (context) => const HomePage()));
           return;
