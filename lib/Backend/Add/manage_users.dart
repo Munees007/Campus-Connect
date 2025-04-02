@@ -27,13 +27,13 @@ Future<void> loginUser(
             userData['password'] == password) {
           await Hive.box('UserBox').put("isLogin", true);
           await Hive.box('UserBox').put("userData", userData);
+
           print(userData['staffId'] == "ADMIN");
           if (userData['staffId'] == "ADMIN") {
             Navigator.pushReplacement(context,
                 MaterialPageRoute(builder: (context) => const AdminHomePage()));
             return;
           }
-
           Navigator.pushReplacement(context,
               MaterialPageRoute(builder: (context) => const HomePage()));
           return;
