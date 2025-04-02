@@ -1,6 +1,7 @@
 import 'package:campus_connect/Pages/home_page.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 
 Future<void> loginUser(
     String id, String password, String role, BuildContext context) async {
@@ -23,6 +24,8 @@ Future<void> loginUser(
             ((role == 'staff' && userData['staffId'] == id) ||
                 (role == 'student' && userData['rollNo'] == id)) &&
             userData['password'] == password) {
+          await Hive.box('UserBox').put("isLogin", true);
+          await Hive.box('UserBox').put("userData", userData);
           Navigator.pushReplacement(context,
               MaterialPageRoute(builder: (context) => const HomePage()));
           return;

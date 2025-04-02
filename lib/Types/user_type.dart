@@ -1,5 +1,6 @@
+import 'dart:collection';
+
 class Staff {
-  final String id;
   final String name;
   final String email;
   final String gender;
@@ -11,7 +12,6 @@ class Staff {
   final int dob;
 
   Staff({
-    required this.id,
     required this.name,
     required this.email,
     required this.gender,
@@ -24,9 +24,8 @@ class Staff {
   });
 
   // Convert Firestore document to Staff object
-  factory Staff.fromMap(String id, Map<String, dynamic> data) {
+  factory Staff.fromMap(LinkedHashMap<dynamic, dynamic> data) {
     return Staff(
-      id: id,
       name: data['name'] ?? '',
       email: data['email'] ?? '',
       gender: data['gender'] ?? '',
@@ -56,7 +55,6 @@ class Staff {
 }
 
 class Student {
-  final String id;
   final String name;
   final String email;
   final String gender;
@@ -68,7 +66,6 @@ class Student {
   final int joinedYear;
 
   Student({
-    required this.id,
     required this.name,
     required this.email,
     required this.gender,
@@ -81,9 +78,8 @@ class Student {
   });
 
   // Convert Firestore document to Student object
-  factory Student.fromMap(String id, Map<String, dynamic> data) {
+  factory Student.fromMap(LinkedHashMap<dynamic, dynamic> data) {
     return Student(
-      id: id,
       name: data['name'] ?? '',
       email: data['email'] ?? '',
       gender: data['gender'] ?? '',
