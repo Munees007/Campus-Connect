@@ -30,6 +30,7 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Color(0xFF1E1E2C),
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(

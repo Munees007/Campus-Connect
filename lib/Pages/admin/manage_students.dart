@@ -169,41 +169,79 @@ class _ManageStudentsState extends State<ManageStudents> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                  colors: [Colors.blueAccent, Colors.deepPurpleAccent]),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text("Student Management",
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold)),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const WebViewPage(
-                                title: "Add Staff",
-                                url:
-                                    "https://student-registration-grievpoint.netlify.app")));
-                  }, // Add student functionality later
-                  icon: const Icon(Icons.add, color: Colors.white),
-                  label: const Text("Add Student",
-                      style: TextStyle(color: Colors.white)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    shadowColor: Colors.transparent,
-                  ),
-                ),
-              ],
-            ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              bool isNarrow =
+                  constraints.maxWidth < 400; // you can adjust the threshold
+              return isNarrow
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          "Student Management",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const WebViewPage(
+                                        title: "Add Student",
+                                        url:
+                                            "https://student-registration-grievpoint.netlify.app")));
+                          },
+                          icon: const Icon(Icons.add),
+                          label: const Text("Add Student"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blueAccent,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Student Management",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const WebViewPage(
+                                        title: "Add Student",
+                                        url:
+                                            "https://student-registration-grievpoint.netlify.app")));
+                          },
+                          icon: const Icon(Icons.add),
+                          label: const Text("Add Student"),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blueAccent,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+            },
           ),
           const SizedBox(height: 16),
 
