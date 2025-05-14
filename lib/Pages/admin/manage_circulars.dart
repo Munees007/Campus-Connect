@@ -40,8 +40,8 @@ class _ManageCircularsState extends State<ManageCirculars> {
         });
 
         // Sort by publish date (newest first)
-        loadedCirculars.sort((a, b) => DateTime.parse(b['publishedAt'])
-            .compareTo(DateTime.parse(a['publishedAt'])));
+        loadedCirculars.sort((a, b) => DateTime.parse(b['createdAt'])
+            .compareTo(DateTime.parse(a['createdAt'])));
 
         setState(() {
           circulars = loadedCirculars;
@@ -148,8 +148,11 @@ class _ManageCircularsState extends State<ManageCirculars> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        CircularDetailPage(circular: circular),
+                                    builder: (context) => CircularDetailPage(
+                                      circular: circular,
+                                      role: "admin",
+                                      userId: "admin",
+                                    ),
                                   ),
                                 );
                               },
@@ -244,14 +247,15 @@ class _ManageCircularsState extends State<ManageCirculars> {
                                             MainAxisAlignment.spaceBetween,
                                         children: [
                                           Text(
-                                            "Published: ${_formatDate(circular['publishedAt'])}",
+                                            "Published: ${_formatDate(circular['createdAt'])}",
                                             style: TextStyle(
                                               color:
                                                   Colors.white.withOpacity(0.5),
                                               fontSize: 12,
                                             ),
                                           ),
-                                          if (circular['viewCount'] != null)
+                                          if (circular['staffViewCount'] !=
+                                              null)
                                             Row(
                                               children: [
                                                 Icon(
@@ -262,7 +266,28 @@ class _ManageCircularsState extends State<ManageCirculars> {
                                                 ),
                                                 const SizedBox(width: 4),
                                                 Text(
-                                                  "${circular['viewCount']}",
+                                                  "Staff: ${circular['staffViewCount']}",
+                                                  style: TextStyle(
+                                                    color: Colors.white
+                                                        .withOpacity(0.5),
+                                                    fontSize: 12,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          if (circular['studentViewCount'] !=
+                                              null)
+                                            Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.visibility,
+                                                  size: 16,
+                                                  color: Colors.white
+                                                      .withOpacity(0.5),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  "Student: ${circular['studentViewCount']}",
                                                   style: TextStyle(
                                                     color: Colors.white
                                                         .withOpacity(0.5),
@@ -326,270 +351,262 @@ class _ManageCircularsState extends State<ManageCirculars> {
   void _showAddCircularDialog(BuildContext context) {
     final titleController = TextEditingController();
     final contentController = TextEditingController();
+
     String selectedCategory = "Academic";
-    String selectedDepartment = "All Departments";
     String selectedAudience = "All";
+    String selectedLevel = "UG";
+    String selectedType = "Aided";
+    String selectedDepartment = "";
 
-    final departments = [
-      "All Departments",
-      "Computer Science",
-      "Electrical Engineering",
-      "Mechanical Engineering",
-      "Civil Engineering",
-      "Electronics & Communication"
-    ];
+    List<String> departmentList = [];
+    final audiences = ["All", "Students Only", "Teaching Staff Only"];
 
-    final audiences = [
-      "All",
-      "Students Only",
-      "Teaching Staff Only",
-      "Non-Teaching Staff Only"
-    ];
+    // Initialize the toggle state for filtering
+    bool isFilterByLevelAndType = true;
 
+    DatabaseReference departmentsRef =
+        FirebaseDatabase.instance.ref().child("departments");
+
+    // Function to fetch departments based on Level and Type
+    void fetchDepartments(Function(void Function()) setState) async {
+      try {
+        final snapshot =
+            await departmentsRef.child("$selectedLevel/$selectedType").get();
+        if (snapshot.exists) {
+          List<dynamic> fetched = snapshot.value as List<dynamic>;
+          setState(() {
+            departmentList = List<String>.from(fetched);
+            if (!departmentList.contains(selectedDepartment)) {
+              selectedDepartment = departmentList.isNotEmpty
+                  ? departmentList.first
+                  : "Select Department";
+            }
+          });
+        } else {
+          setState(() {
+            departmentList = [];
+          });
+        }
+      } catch (e) {
+        print("Error fetching departments: $e");
+        setState(() {
+          departmentList = [];
+        });
+      }
+    }
+
+    // Show dialog
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: const Color(0xFF23233A),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.white.withOpacity(0.2)),
-              ),
-              title: const Text(
-                "Add New Circular",
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TextField(
-                      controller: titleController,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        labelText: "Title",
-                        labelStyle:
-                            TextStyle(color: Colors.white.withOpacity(0.7)),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              BorderSide(color: Colors.white.withOpacity(0.3)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: Colors.blueAccent),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      "Category",
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      children: [
-                        _buildCategoryChip("Academic", selectedCategory,
-                            (value) {
-                          setState(() => selectedCategory = value);
-                        }),
-                        _buildCategoryChip("Administrative", selectedCategory,
-                            (value) {
-                          setState(() => selectedCategory = value);
-                        }),
-                        _buildCategoryChip("Event", selectedCategory, (value) {
-                          setState(() => selectedCategory = value);
-                        }),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      "Department",
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border:
-                            Border.all(color: Colors.white.withOpacity(0.3)),
-                      ),
-                      child: DropdownButton<String>(
-                        value: selectedDepartment,
-                        onChanged: (String? newValue) {
-                          if (newValue != null) {
-                            setState(() {
-                              selectedDepartment = newValue;
-                            });
-                          }
+        return StatefulBuilder(builder: (context, setState) {
+          // Fetch departments when Level and Type are changed or toggle is on
+          if (isFilterByLevelAndType && departmentList.isEmpty) {
+            fetchDepartments(setState);
+          }
+
+          return AlertDialog(
+            backgroundColor: const Color(0xFF23233A),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: Colors.white.withOpacity(0.2)),
+            ),
+            title: const Text(
+              "Add New Circular",
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: titleController,
+                    style: const TextStyle(color: Colors.white),
+                    decoration: _inputDecoration("Title"),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text("Category",
+                      style: TextStyle(color: Colors.white70)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      _buildCategoryChip("Academic", selectedCategory,
+                          (val) => setState(() => selectedCategory = val)),
+                      _buildCategoryChip("Administrative", selectedCategory,
+                          (val) => setState(() => selectedCategory = val)),
+                      _buildCategoryChip("Event", selectedCategory,
+                          (val) => setState(() => selectedCategory = val)),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Toggle to switch between filtering departments by Level and Type
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("Filter by Level & Type",
+                          style: TextStyle(color: Colors.white70)),
+                      Switch(
+                        value: isFilterByLevelAndType,
+                        onChanged: (val) {
+                          setState(() {
+                            isFilterByLevelAndType = val;
+                            departmentList = [];
+                            if (isFilterByLevelAndType) {
+                              selectedLevel = "UG";
+                              selectedType = "Aided";
+                              fetchDepartments(setState);
+                            } else {
+                              selectedLevel = "";
+                              selectedType = "";
+                              selectedDepartment = "All";
+                              departmentList = ["All"];
+                            }
+                          });
                         },
-                        items: departments
-                            .map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        isExpanded: true,
-                        dropdownColor: const Color(0xFF23233A),
-                        style: const TextStyle(color: Colors.white),
-                        underline: Container(),
                       ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Conditionally show Level and Type dropdowns only if the toggle is ON
+                  if (isFilterByLevelAndType) ...[
+                    const Text("Level",
+                        style: TextStyle(color: Colors.white70)),
+                    _buildDropdown(
+                      value: selectedLevel,
+                      items: ["UG", "PG"],
+                      onChanged: (val) {
+                        setState(() {
+                          selectedLevel = val!;
+                          departmentList = [];
+                          fetchDepartments(setState);
+                        });
+                      },
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      "Target Audience",
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border:
-                            Border.all(color: Colors.white.withOpacity(0.3)),
-                      ),
-                      child: DropdownButton<String>(
-                        value: selectedAudience,
-                        onChanged: (String? newValue) {
-                          if (newValue != null) {
-                            setState(() {
-                              selectedAudience = newValue;
-                            });
-                          }
-                        },
-                        items: audiences
-                            .map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        isExpanded: true,
-                        dropdownColor: const Color(0xFF23233A),
-                        style: const TextStyle(color: Colors.white),
-                        underline: Container(),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: contentController,
-                      style: const TextStyle(color: Colors.white),
-                      maxLines: 5,
-                      decoration: InputDecoration(
-                        labelText: "Content",
-                        alignLabelWithHint: true,
-                        labelStyle:
-                            TextStyle(color: Colors.white.withOpacity(0.7)),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              BorderSide(color: Colors.white.withOpacity(0.3)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: Colors.blueAccent),
-                        ),
-                      ),
+                    const Text("Type", style: TextStyle(color: Colors.white70)),
+                    _buildDropdown(
+                      value: selectedType,
+                      items: ["Aided", "Self Financed"],
+                      onChanged: (val) {
+                        setState(() {
+                          selectedType = val!;
+                          departmentList = [];
+                          fetchDepartments(setState);
+                        });
+                      },
                     ),
                   ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text(
-                    "Cancel",
-                    style: TextStyle(color: Colors.white70),
+
+                  const SizedBox(height: 16),
+                  const Text("Department",
+                      style: TextStyle(color: Colors.white70)),
+                  _buildDropdown(
+                    value: selectedDepartment,
+                    items: departmentList,
+                    onChanged: (val) {
+                      setState(() {
+                        selectedDepartment = val!;
+                      });
+                    },
                   ),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    // Implement add circular functionality
-                    if (titleController.text.isNotEmpty &&
-                        contentController.text.isNotEmpty) {
-                      try {
-                        setState(() {
-                          isLoading = true;
-                        });
+                  const SizedBox(height: 16),
+                  const Text("Target Audience",
+                      style: TextStyle(color: Colors.white70)),
+                  _buildDropdown(
+                    value: selectedAudience,
+                    items: audiences,
+                    onChanged: (val) {
+                      setState(() {
+                        selectedAudience = val!;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: contentController,
+                    style: const TextStyle(color: Colors.white),
+                    maxLines: 5,
+                    decoration: _inputDecoration("Content"),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel",
+                    style: TextStyle(color: Colors.white70)),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (titleController.text.isNotEmpty &&
+                      contentController.text.isNotEmpty &&
+                      selectedDepartment.isNotEmpty) {
+                    try {
+                      final newCircular = {
+                        'title': titleController.text,
+                        'content': contentController.text,
+                        'category': selectedCategory,
+                        'level': selectedLevel,
+                        'type': selectedType,
+                        'department': selectedDepartment,
+                        'departmentType': selectedType,
+                        'audience': selectedAudience,
+                        'createdAt': DateTime.now().toIso8601String(),
+                        'staffViewCount': 0,
+                        'studentViewCount': 0,
+                      };
 
-                        final newCircular = {
-                          'title': titleController.text,
-                          'content': contentController.text,
-                          'category': selectedCategory,
-                          'department': selectedDepartment == "All Departments"
-                              ? "All"
-                              : selectedDepartment,
-                          'audience': selectedAudience,
-                          'publishedAt': DateTime.now().toIso8601String(),
-                          'viewCount': 0,
-                        };
+                      await _circularsRef.push().set(newCircular);
+                      Navigator.pop(context);
+                      _loadCirculars();
 
-                        // Push to Firebase
-                        await _circularsRef.push().set(newCircular);
-
-                        Navigator.of(context).pop();
-                        _loadCirculars(); // Refresh the list
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content:
-                                const Text("Circular published successfully"),
-                            backgroundColor: Colors.green,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                        );
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text("Error publishing circular: $e"),
-                            backgroundColor: Colors.red,
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      } finally {
-                        setState(() {
-                          isLoading = false;
-                        });
-                      }
-                    } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Please fill all required fields"),
+                        SnackBar(
+                          content: const Text("Circular added successfully"),
+                          backgroundColor: Colors.green,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Error adding circular: $e"),
                           backgroundColor: Colors.red,
                           behavior: SnackBarBehavior.floating,
                         ),
                       );
                     }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Please fill all required fields"),
+                        backgroundColor: Colors.red,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text("Publish"),
                 ),
-              ],
-            );
-          },
-        );
+                child: const Text("Add"),
+              ),
+            ],
+          );
+        });
       },
     );
   }
@@ -598,276 +615,301 @@ class _ManageCircularsState extends State<ManageCirculars> {
       BuildContext context, Map<String, dynamic> circular) {
     final titleController = TextEditingController(text: circular['title']);
     final contentController = TextEditingController(text: circular['content']);
+
     String selectedCategory = circular['category'];
-    String selectedDepartment = circular['department'] == "All"
-        ? "All Departments"
-        : circular['department'];
     String selectedAudience = circular['audience'];
+    String selectedLevel = circular['level'] ?? "UG";
+    String selectedType = circular['type'] ?? "Aided";
+    String selectedDepartment = circular['department'] ?? "";
 
-    final departments = [
-      "All Departments",
-      "Computer Science",
-      "Electrical Engineering",
-      "Mechanical Engineering",
-      "Civil Engineering",
-      "Electronics & Communication"
-    ];
+    final audiences = ["All", "Students Only", "Teaching Staff Only"];
+    List<String> departmentList = [];
 
-    final audiences = [
-      "All",
-      "Students Only",
-      "Teaching Staff Only",
-      "Non-Teaching Staff Only"
-    ];
+    DatabaseReference departmentsRef =
+        FirebaseDatabase.instance.ref().child("departments");
+    bool isFilterByLevelAndType = true;
+    // Function to fetch departments based on Level and Type
+    void fetchDepartments(Function(void Function()) setState) async {
+      try {
+        final snapshot =
+            await departmentsRef.child("$selectedLevel/$selectedType").get();
+        if (snapshot.exists) {
+          List<dynamic> fetched = snapshot.value as List<dynamic>;
+          setState(() {
+            departmentList = List<String>.from(fetched);
+            if (!departmentList.contains(selectedDepartment)) {
+              selectedDepartment = departmentList.isNotEmpty
+                  ? departmentList.first
+                  : "Select Department";
+            }
+          });
+        } else {
+          setState(() {
+            departmentList = [];
+          });
+        }
+      } catch (e) {
+        print("Error fetching departments: $e");
+        setState(() {
+          departmentList = [];
+        });
+      }
+    }
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              backgroundColor: const Color(0xFF23233A),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-                side: BorderSide(color: Colors.white.withOpacity(0.2)),
-              ),
-              title: const Text(
-                "Edit Circular",
-                style:
-                    TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-              ),
-              content: SingleChildScrollView(
+        return StatefulBuilder(builder: (context, setState) {
+          // Check if the department is "All", then disable Level and Type filtering
+          if (selectedDepartment == "All") {
+            setState(() {
+              isFilterByLevelAndType = false;
+              departmentList = ["All"]; // Set department list to "All"
+            });
+          }
+
+          if (isFilterByLevelAndType && departmentList.isEmpty) {
+            fetchDepartments(setState);
+          }
+
+          return AlertDialog(
+            backgroundColor: const Color(0xFF23233A),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: Colors.white.withOpacity(0.2)),
+            ),
+            title: const Text("Edit Circular",
+                style: TextStyle(color: Colors.white)),
+            content: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: MediaQuery.of(context).size.width * 0.9,
+                ),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     TextField(
                       controller: titleController,
                       style: const TextStyle(color: Colors.white),
-                      decoration: InputDecoration(
-                        labelText: "Title",
-                        labelStyle:
-                            TextStyle(color: Colors.white.withOpacity(0.7)),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              BorderSide(color: Colors.white.withOpacity(0.3)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: Colors.blueAccent),
-                        ),
-                      ),
+                      decoration: _inputDecoration("Title"),
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      "Category",
-                      style: TextStyle(color: Colors.white70),
-                    ),
+                    const Text("Category",
+                        style: TextStyle(color: Colors.white70)),
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
                       children: [
                         _buildCategoryChip("Academic", selectedCategory,
-                            (value) {
-                          setState(() => selectedCategory = value);
-                        }),
+                            (val) => setState(() => selectedCategory = val)),
                         _buildCategoryChip("Administrative", selectedCategory,
-                            (value) {
-                          setState(() => selectedCategory = value);
-                        }),
-                        _buildCategoryChip("Event", selectedCategory, (value) {
-                          setState(() => selectedCategory = value);
-                        }),
+                            (val) => setState(() => selectedCategory = val)),
+                        _buildCategoryChip("Event", selectedCategory,
+                            (val) => setState(() => selectedCategory = val)),
                       ],
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      "Department",
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border:
-                            Border.all(color: Colors.white.withOpacity(0.3)),
-                      ),
-                      child: DropdownButton<String>(
-                        value: selectedDepartment,
-                        onChanged: (String? newValue) {
-                          if (newValue != null) {
-                            setState(() {
-                              selectedDepartment = newValue;
-                            });
-                          }
-                        },
-                        items: departments
-                            .map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        isExpanded: true,
-                        dropdownColor: const Color(0xFF23233A),
-                        style: const TextStyle(color: Colors.white),
-                        underline: Container(),
-                      ),
+                    const Text("Level",
+                        style: TextStyle(color: Colors.white70)),
+                    _buildDropdown(
+                      value: selectedLevel,
+                      items: ["UG", "PG"],
+                      onChanged: (val) {
+                        setState(() {
+                          selectedLevel = val!;
+                          departmentList = [];
+                          fetchDepartments(setState);
+                        });
+                      },
                     ),
                     const SizedBox(height: 16),
-                    const Text(
-                      "Target Audience",
-                      style: TextStyle(color: Colors.white70),
+                    const Text("Type", style: TextStyle(color: Colors.white70)),
+                    _buildDropdown(
+                      value: selectedType,
+                      items: ["Aided", "Self Financed"],
+                      onChanged: (val) {
+                        setState(() {
+                          selectedType = val!;
+                          departmentList = [];
+                          fetchDepartments(setState);
+                        });
+                      },
                     ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border:
-                            Border.all(color: Colors.white.withOpacity(0.3)),
-                      ),
-                      child: DropdownButton<String>(
-                        value: selectedAudience,
-                        onChanged: (String? newValue) {
-                          if (newValue != null) {
-                            setState(() {
-                              selectedAudience = newValue;
-                            });
+                    const SizedBox(height: 16),
+                    const Text("Department",
+                        style: TextStyle(color: Colors.white70)),
+                    _buildDropdown(
+                      value: selectedDepartment,
+                      items: departmentList,
+                      onChanged: (val) {
+                        setState(() {
+                          selectedDepartment = val!;
+                          // If department is "All", disable level and type filter
+                          if (selectedDepartment == "All") {
+                            isFilterByLevelAndType = false;
+                          } else {
+                            isFilterByLevelAndType = true;
                           }
-                        },
-                        items: audiences
-                            .map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        isExpanded: true,
-                        dropdownColor: const Color(0xFF23233A),
-                        style: const TextStyle(color: Colors.white),
-                        underline: Container(),
-                      ),
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    const Text("Target Audience",
+                        style: TextStyle(color: Colors.white70)),
+                    _buildDropdown(
+                      value: selectedAudience,
+                      items: audiences,
+                      onChanged: (val) {
+                        setState(() {
+                          selectedAudience = val!;
+                        });
+                      },
                     ),
                     const SizedBox(height: 16),
                     TextField(
                       controller: contentController,
                       style: const TextStyle(color: Colors.white),
                       maxLines: 5,
-                      decoration: InputDecoration(
-                        labelText: "Content",
-                        alignLabelWithHint: true,
-                        labelStyle:
-                            TextStyle(color: Colors.white.withOpacity(0.7)),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              BorderSide(color: Colors.white.withOpacity(0.3)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                          borderSide:
-                              const BorderSide(color: Colors.blueAccent),
-                        ),
-                      ),
+                      decoration: _inputDecoration("Content"),
                     ),
                   ],
                 ),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text(
-                    "Cancel",
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    if (titleController.text.isNotEmpty &&
-                        contentController.text.isNotEmpty) {
-                      try {
-                        setState(() {
-                          isLoading = true;
-                        });
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel",
+                    style: TextStyle(color: Colors.white70)),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (titleController.text.isNotEmpty &&
+                      contentController.text.isNotEmpty &&
+                      selectedDepartment.isNotEmpty) {
+                    try {
+                      final updatedCircular = {
+                        'title': titleController.text,
+                        'content': contentController.text,
+                        'category': selectedCategory,
+                        'level': selectedLevel,
+                        'type': selectedType,
+                        'department': selectedDepartment,
+                        'audience': selectedAudience,
+                        'updatedAt': DateTime.now().toIso8601String(),
+                        'createdAt': circular['createdAt'],
+                        'staffViewCount': circular['staffViewCount'],
+                        'studentViewCount': circular['studentViewCount'],
+                      };
 
-                        final updatedCircular = {
-                          'title': titleController.text,
-                          'content': contentController.text,
-                          'category': selectedCategory,
-                          'department': selectedDepartment == "All Departments"
-                              ? "All"
-                              : selectedDepartment,
-                          'audience': selectedAudience,
-                          'updatedAt': DateTime.now().toIso8601String(),
-                          // Keep original publish date and view count
-                          'publishedAt': circular['publishedAt'],
-                          'viewCount': circular['viewCount'],
-                        };
+                      await _circularsRef
+                          .child(circular['id'])
+                          .update(updatedCircular);
 
-                        // Update in Firebase
-                        await _circularsRef
-                            .child(circular['id'])
-                            .update(updatedCircular);
+                      Navigator.pop(context);
+                      _loadCirculars();
 
-                        Navigator.of(context).pop();
-                        _loadCirculars(); // Refresh the list
-
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content:
-                                const Text("Circular updated successfully"),
-                            backgroundColor: Colors.green,
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                        );
-                      } catch (e) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text("Error updating circular: $e"),
-                            backgroundColor: Colors.red,
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      } finally {
-                        setState(() {
-                          isLoading = false;
-                        });
-                      }
-                    } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Please fill all required fields"),
+                        SnackBar(
+                          content: const Text("Circular updated successfully"),
+                          backgroundColor: Colors.green,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      );
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("Error updating circular: $e"),
                           backgroundColor: Colors.red,
                           behavior: SnackBarBehavior.floating,
                         ),
                       );
                     }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueAccent,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Please fill all required fields"),
+                        backgroundColor: Colors.red,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Text("Update"),
                 ),
-              ],
-            );
-          },
-        );
+                child: const Text("Update"),
+              ),
+            ],
+          );
+        });
       },
+    );
+  }
+
+  InputDecoration _inputDecoration(String label) => InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: const BorderSide(color: Colors.blueAccent),
+        ),
+      );
+
+  Widget _buildDropdown({
+    required String value,
+    required List<String> items,
+    required Function(String?) onChanged,
+  }) =>
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.white.withOpacity(0.3)),
+        ),
+        child: DropdownButton<String>(
+          value: value,
+          onChanged: onChanged,
+          items: items.map((String item) {
+            return DropdownMenuItem<String>(
+              value: item,
+              child: Text(item, style: const TextStyle(color: Colors.white)),
+            );
+          }).toList(),
+          isExpanded: true,
+          dropdownColor: const Color(0xFF23233A),
+          style: const TextStyle(color: Colors.white),
+          underline: Container(),
+        ),
+      );
+
+  Widget _buildCategoryChip(
+    String label,
+    String selected,
+    ValueChanged<String> onSelected,
+  ) {
+    final isSelected = selected == label;
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: (_) => onSelected(label),
+      selectedColor: Colors.blueAccent,
+      backgroundColor: Colors.white.withOpacity(0.1),
+      labelStyle: TextStyle(
+        color: isSelected ? Colors.white : Colors.black,
+      ),
     );
   }
 
@@ -944,29 +986,29 @@ class _ManageCircularsState extends State<ManageCirculars> {
     );
   }
 
-  Widget _buildCategoryChip(
-      String label, String selectedCategory, Function(String) onSelected) {
-    final isSelected = selectedCategory == label;
-    return ChoiceChip(
-      label: Text(
-        label,
-        style: TextStyle(
-          color: isSelected ? Colors.white : Colors.white70,
-          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-        ),
-      ),
-      selected: isSelected,
-      selectedColor: label == "Academic"
-          ? Colors.orange
-          : label == "Administrative"
-              ? Colors.green
-              : Colors.purple,
-      backgroundColor: Colors.white.withOpacity(0.1),
-      onSelected: (bool selected) {
-        if (selected) {
-          onSelected(label);
-        }
-      },
-    );
-  }
+  // Widget _buildCategoryChip(
+  //     String label, String selectedCategory, Function(String) onSelected) {
+  //   final isSelected = selectedCategory == label;
+  //   return ChoiceChip(
+  //     label: Text(
+  //       label,
+  //       style: TextStyle(
+  //         color: isSelected ? Colors.white : Colors.white70,
+  //         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+  //       ),
+  //     ),
+  //     selected: isSelected,
+  //     selectedColor: label == "Academic"
+  //         ? Colors.orange
+  //         : label == "Administrative"
+  //             ? Colors.green
+  //             : Colors.purple,
+  //     backgroundColor: Colors.white.withOpacity(0.1),
+  //     onSelected: (bool selected) {
+  //       if (selected) {
+  //         onSelected(label);
+  //       }
+  //     },
+  //   );
+  // }
 }

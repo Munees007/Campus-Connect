@@ -1,7 +1,8 @@
-import 'package:campus_connect/Pages/admin/manage_grievances.dart';
+import 'package:campus_connect/Pages/chat_bot.dart';
 import 'package:campus_connect/Pages/admin/manage_staff.dart';
 import 'package:campus_connect/Pages/admin/manage_students.dart';
 import 'package:campus_connect/Pages/admin/manage_circulars.dart';
+import 'package:campus_connect/Pages/grievance_page.dart';
 import 'package:campus_connect/Pages/profile_page.dart';
 import 'package:flutter/material.dart';
 
@@ -25,7 +26,8 @@ class _AdminHomePageState extends State<AdminHomePage> {
 
     // Initialize admin pages
     pages = [
-      const ManageGrievances(),
+      const ChatBot(),
+      const GrievancePage(),
       const ManageStaff(),
       const ManageStudents(),
       const ManageCirculars(),
@@ -33,6 +35,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
     ];
 
     pageTitles = [
+      "Help Desk",
       "Manage Grievances",
       "Manage Staff",
       "Manage Students",
@@ -41,6 +44,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
     ];
 
     pageIcons = [
+      Icons.chat_bubble_outline,
       Icons.assignment_outlined,
       Icons.people_alt_outlined,
       Icons.school_outlined,
@@ -49,6 +53,11 @@ class _AdminHomePageState extends State<AdminHomePage> {
     ];
 
     bottomBarItems = const [
+      BottomNavigationBarItem(
+        icon: Icon(Icons.chat_bubble_outline),
+        activeIcon: Icon(Icons.chat_bubble),
+        label: "Chat",
+      ),
       BottomNavigationBarItem(
         icon: Icon(Icons.assignment_outlined),
         activeIcon: Icon(Icons.assignment),
@@ -93,7 +102,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
           bottom: false,
           child: Column(
             children: [
-              _buildAppBar(),
+              _buildAppBar(context),
               Expanded(
                 child: pages[currentPage],
               ),
@@ -105,7 +114,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
     );
   }
 
-  Widget _buildAppBar() {
+  Widget _buildAppBar(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    bool isSmallScreen = screenWidth < 600; // Adjust threshold as needed
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
       decoration: BoxDecoration(
@@ -118,43 +130,53 @@ class _AdminHomePageState extends State<AdminHomePage> {
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(
-                pageIcons[currentPage],
-                color: Colors.white,
-                size: 24,
+              Row(
+                children: [
+                  Icon(pageIcons[currentPage], color: Colors.white, size: 24),
+                  const SizedBox(width: 12),
+                  Text(
+                    pageTitles[currentPage],
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Text(
-                pageTitles[currentPage],
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              if (!isSmallScreen)
+                _buildAdminTag(), // Show Admin tag inline if wide screen
             ],
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.blueAccent.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(15),
-              border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
-            ),
-            child: const Text(
-              "Admin",
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
+          if (isSmallScreen)
+            const SizedBox(height: 10), // Add spacing for small screen
+          if (isSmallScreen)
+            _buildAdminTag(), // Move Admin tag to next row if screen is small
         ],
+      ),
+    );
+  }
+
+  Widget _buildAdminTag() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.blueAccent.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
+      ),
+      child: const Text(
+        "Admin",
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }

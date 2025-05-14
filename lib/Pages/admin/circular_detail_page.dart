@@ -5,7 +5,14 @@ import 'package:firebase_database/firebase_database.dart';
 class CircularDetailPage extends StatefulWidget {
   final Map<String, dynamic> circular;
 
-  const CircularDetailPage({super.key, required this.circular});
+  final String role;
+  final String userId;
+
+  const CircularDetailPage(
+      {super.key,
+      required this.circular,
+      required this.role,
+      required this.userId});
 
   @override
   State<CircularDetailPage> createState() => _CircularDetailPageState();
@@ -22,23 +29,39 @@ class _CircularDetailPageState extends State<CircularDetailPage> {
 
   Future<void> _incrementViewCount() async {
     try {
+      if (widget.role == "admin") return;
+
       final DatabaseReference circularRef = FirebaseDatabase.instance
           .ref()
           .child('circulars')
           .child(widget.circular['id']);
 
-      // Get current view count
-      final snapshot = await circularRef.child('viewCount').get();
-      int currentCount = 0;
+      final userId = widget.userId;
+      final viewIdsKey =
+          widget.role == "student" ? "studentViewIds" : "staffViewIds";
+      final viewCountKey =
+          widget.role == "student" ? "studentViewCount" : "staffViewCount";
 
-      if (snapshot.exists) {
-        currentCount = snapshot.value as int;
+      final userViewRef = circularRef.child(viewIdsKey).child(userId);
+
+      final userViewedSnapshot = await userViewRef.get();
+
+      if (!userViewedSnapshot.exists) {
+        // Mark user as viewed
+        await userViewRef.set(true);
+
+        // Get current view count
+        final countSnapshot = await circularRef.child(viewCountKey).get();
+        int currentCount = 0;
+
+        if (countSnapshot.exists) {
+          currentCount = countSnapshot.value as int;
+        }
+
+        // Increment view count
+        await circularRef.update({viewCountKey: currentCount + 1});
       }
-
-      // Increment view count
-      await circularRef.update({'viewCount': currentCount + 1});
     } catch (e) {
-      // Handle error silently
       debugPrint("Error incrementing view count: $e");
     }
   }
@@ -178,7 +201,7 @@ class _CircularDetailPageState extends State<CircularDetailPage> {
                       children: [
                         _buildInfoItem(
                           "Published On",
-                          _formatDate(circular['publishedAt']),
+                          _formatDate(circular['createdAt']),
                           icon: Icons.calendar_today,
                         ),
                         _buildInfoItem(
@@ -191,10 +214,18 @@ class _CircularDetailPageState extends State<CircularDetailPage> {
                           circular['audience'] ?? 'All',
                           icon: Icons.people,
                         ),
-                        if (circular['viewCount'] != null)
+                        if (circular['staffViewCount'] != null &&
+                            widget.role == "admin")
                           _buildInfoItem(
-                            "Views",
-                            circular['viewCount'].toString(),
+                            "Staff Views",
+                            circular['staffViewCount'].toString(),
+                            icon: Icons.visibility,
+                          ),
+                        if (circular['studentViewCount'] != null &&
+                            widget.role == "admin")
+                          _buildInfoItem(
+                            "Student Views",
+                            circular['studentViewCount'].toString(),
                             icon: Icons.visibility,
                           ),
                       ],
@@ -236,128 +267,130 @@ class _CircularDetailPageState extends State<CircularDetailPage> {
             const SizedBox(height: 24),
 
             // Admin actions
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    // You'll need to pass the edit function to this page or implement it here
-                  },
-                  icon: const Icon(Icons.edit),
-                  label: const Text("Edit Circular"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+
+            if (widget.role == "admin")
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      Navigator.pop(context);
+                      // You'll need to pass the edit function to this page or implement it here
+                    },
+                    icon: const Icon(Icons.edit),
+                    label: const Text("Edit Circular"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Show delete confirmation
-                    showDialog(
-                      context: context,
-                      builder: (BuildContext context) {
-                        return AlertDialog(
-                          backgroundColor: const Color(0xFF23233A),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                            side: BorderSide(
-                                color: Colors.white.withOpacity(0.2)),
-                          ),
-                          title: const Text(
-                            "Confirm Deletion",
-                            style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold),
-                          ),
-                          content: Text(
-                            "Are you sure you want to delete this circular?",
-                            style:
-                                TextStyle(color: Colors.white.withOpacity(0.8)),
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () {
-                                Navigator.of(context).pop();
-                              },
-                              child: const Text(
-                                "Cancel",
-                                style: TextStyle(color: Colors.white70),
-                              ),
+                  const SizedBox(width: 16),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      // Show delete confirmation
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            backgroundColor: const Color(0xFF23233A),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(
+                                  color: Colors.white.withOpacity(0.2)),
                             ),
-                            ElevatedButton(
-                              onPressed: () async {
-                                try {
-                                  setState(() {
-                                    isLoading = true;
-                                  });
-
-                                  // Delete from Firebase
-                                  await FirebaseDatabase.instance
-                                      .ref()
-                                      .child('circulars')
-                                      .child(circular['id'])
-                                      .remove();
-
-                                  // Pop twice to go back to the list
-                                  Navigator.of(context).pop(); // Close dialog
-                                  Navigator.of(context)
-                                      .pop(); // Go back to list
-
-                                  // Show success message
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content:
-                                          Text("Circular deleted successfully"),
-                                      backgroundColor: Colors.green,
-                                    ),
-                                  );
-                                } catch (e) {
-                                  Navigator.of(context).pop(); // Close dialog
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content:
-                                          Text("Error deleting circular: $e"),
-                                      backgroundColor: Colors.red,
-                                    ),
-                                  );
-                                } finally {
-                                  setState(() {
-                                    isLoading = false;
-                                  });
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.red,
-                                foregroundColor: Colors.white,
-                              ),
-                              child: const Text("Delete"),
+                            title: const Text(
+                              "Confirm Deletion",
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
                             ),
-                          ],
-                        );
-                      },
-                    );
-                  },
-                  icon: const Icon(Icons.delete),
-                  label: const Text("Delete"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                            content: Text(
+                              "Are you sure you want to delete this circular?",
+                              style: TextStyle(
+                                  color: Colors.white.withOpacity(0.8)),
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                child: const Text(
+                                  "Cancel",
+                                  style: TextStyle(color: Colors.white70),
+                                ),
+                              ),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  try {
+                                    setState(() {
+                                      isLoading = true;
+                                    });
+
+                                    // Delete from Firebase
+                                    await FirebaseDatabase.instance
+                                        .ref()
+                                        .child('circulars')
+                                        .child(circular['id'])
+                                        .remove();
+
+                                    // Pop twice to go back to the list
+                                    Navigator.of(context).pop(); // Close dialog
+                                    Navigator.of(context)
+                                        .pop(); // Go back to list
+
+                                    // Show success message
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                            "Circular deleted successfully"),
+                                        backgroundColor: Colors.green,
+                                      ),
+                                    );
+                                  } catch (e) {
+                                    Navigator.of(context).pop(); // Close dialog
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content:
+                                            Text("Error deleting circular: $e"),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  } finally {
+                                    setState(() {
+                                      isLoading = false;
+                                    });
+                                  }
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.red,
+                                  foregroundColor: Colors.white,
+                                ),
+                                child: const Text("Delete"),
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                    icon: const Icon(Icons.delete),
+                    label: const Text("Delete"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
+                ],
+              ),
           ],
         ),
       ),

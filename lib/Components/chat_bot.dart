@@ -9,7 +9,6 @@ import 'dart:convert';
 class ChatBot extends StatefulWidget {
   const ChatBot({super.key});
 
-
   @override
   State<ChatBot> createState() => _ChatBotState();
 }
@@ -20,7 +19,7 @@ class _ChatBotState extends State<ChatBot> {
   final ScrollController _scrollController = ScrollController();
   String selectedLanguage = 'en';
   late Map<String, dynamic> reference;
-  bool _hasValue = false;
+
   Map<String, String> languageMap = {
     'en': 'English',
     'ta': 'தமிழ்',
@@ -154,50 +153,51 @@ class _ChatBotState extends State<ChatBot> {
                     padding: const EdgeInsets.all(10),
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
-                      bool showReference = _messages[index]['showReference'] ?? false;
+                      bool showReference =
+                          _messages[index]['showReference'] ?? false;
                       return Column(
                         children: [
-                           MessageBubble(
+                          MessageBubble(
                             message: _messages[index]['message'],
                             isUser: _messages[index]['isUser'],
-                           ),
-                           if(showReference)
-                           Container(
-                             width: 180,
-                             alignment: Alignment.bottomRight,
-                             child: Column(
-                                 children: [
-                                   Container(
-                                     height:
-                                         200,
-                                     child: ListView.builder(
-                                       shrinkWrap: true,
-                                       itemCount: reference.length,
-                                       itemBuilder: (context, key) {
-                                         return Padding(
-                                           padding: const EdgeInsets.only(
-                                               bottom: 8.0),
-                                           child: FloatingActionButton(
-                                             onPressed: () async {
-                                               await getChatbotResponse(
-                                                   reference.values.elementAt(key));
-                                             },
-                                             backgroundColor: chatBotAppBarColor,
-                                             child: Text(
-                                               reference.keys.elementAt(key),
-                                               style: const TextStyle(
-                                                 fontSize: 12,
-                                                 color: Colors.white,
-                                               ),
-                                             ),
-                                           ),
-                                         );
-                                       },
-                                     ),
-                                   ),
-                                 ],
-                               ),
-                           )
+                          ),
+                          if (showReference)
+                            Container(
+                              width: 180,
+                              alignment: Alignment.bottomRight,
+                              child: Column(
+                                children: [
+                                  Container(
+                                    height: 200,
+                                    child: ListView.builder(
+                                      shrinkWrap: true,
+                                      itemCount: reference.length,
+                                      itemBuilder: (context, key) {
+                                        return Padding(
+                                          padding: const EdgeInsets.only(
+                                              bottom: 8.0),
+                                          child: FloatingActionButton(
+                                            onPressed: () async {
+                                              await getChatbotResponse(reference
+                                                  .values
+                                                  .elementAt(key));
+                                            },
+                                            backgroundColor: chatBotAppBarColor,
+                                            child: Text(
+                                              reference.keys.elementAt(key),
+                                              style: const TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
                         ],
                       );
                     },
@@ -205,8 +205,7 @@ class _ChatBotState extends State<ChatBot> {
                 ),
                 Container(
                   height: 70,
-                  
-padding: const EdgeInsets.symmetric(
+                  padding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 8,
                   ),

@@ -3,7 +3,6 @@ import 'package:campus_connect/Pages/login_page.dart';
 import 'package:campus_connect/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 void main() async {

@@ -1,4 +1,6 @@
+import 'package:campus_connect/Components/web_view_component.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_database/firebase_database.dart';
 
 class ManageStaff extends StatefulWidget {
   const ManageStaff({super.key});
@@ -8,112 +10,376 @@ class ManageStaff extends StatefulWidget {
 }
 
 class _ManageStaffState extends State<ManageStaff> {
+  final DatabaseReference _database =
+      FirebaseDatabase.instance.ref().child("users");
+  List<Map<String, dynamic>> staffMembers = [];
+  bool isLoading = true; // Track loading state
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchStaff();
+  }
+
+  void _fetchStaff() async {
+    _database.orderByChild("role").equalTo("staff").once().then((event) {
+      final data = event.snapshot.value as Map<dynamic, dynamic>?;
+
+      setState(() {
+        isLoading = false;
+        staffMembers = data != null
+            ? data.entries
+                .map((entry) => Map<String, dynamic>.from(entry.value as Map))
+                .toList()
+            : [];
+      });
+    });
+  }
+
+  void _addStaff(String name, String email, String department) {
+    String staffId = DateTime.now().millisecondsSinceEpoch.toString();
+
+    Map<String, dynamic> newStaff = {
+      "staffId": staffId,
+      "name": name,
+      "email": email,
+      "department": department,
+      "role": "staff",
+    };
+
+    _database.child(staffId).set(newStaff).then((_) {
+      setState(() {
+        staffMembers.add(newStaff);
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Staff $name added"),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+    });
+  }
+
+  void _deleteStaff(String staffId) {
+    _database.orderByChild("staffId").equalTo(staffId).once().then((event) {
+      final data = event.snapshot.value as Map<dynamic, dynamic>?;
+
+      if (data != null) {
+        data.keys.forEach((key) {
+          _database.child(key).remove().then((_) {
+            setState(() {
+              staffMembers.removeWhere((staff) => staff["staffId"] == staffId);
+            });
+
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("Staff $staffId deleted"),
+                backgroundColor: Colors.redAccent,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+            );
+          });
+        });
+      }
+    });
+  }
+
+  void _updateStaff(String staffId, String name, String email) {
+    _database.orderByChild("staffId").equalTo(staffId).once().then((event) {
+      final data = event.snapshot.value as Map<dynamic, dynamic>?;
+
+      if (data != null) {
+        // Get the correct Firebase-generated key
+        String firebaseKey = data.keys.first;
+
+        // Update only the specified fields
+        _database.child(firebaseKey).update({
+          "name": name,
+          "email": email,
+        }).then((_) {
+          setState(() {
+            for (var staff in staffMembers) {
+              if (staff["staffId"] == staffId) {
+                staff["name"] = name;
+                staff["email"] = email;
+                break;
+              }
+            }
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Staff $staffId updated successfully!"),
+              backgroundColor: Colors.green,
+            ),
+          );
+        });
+      }
+    });
+  }
+
+  void _showEditDialog(Map<String, dynamic> staff) {
+    TextEditingController nameController =
+        TextEditingController(text: staff["name"]);
+    TextEditingController emailController =
+        TextEditingController(text: staff["email"]);
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF23233A),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text("Edit Staff",
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                    labelText: "Name",
+                    labelStyle: TextStyle(color: Colors.white)),
+              ),
+              TextField(
+                controller: emailController,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                    labelText: "Email",
+                    labelStyle: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel",
+                    style: TextStyle(color: Colors.white70))),
+            ElevatedButton(
+              onPressed: () {
+                String name = nameController.text;
+                String email = emailController.text;
+                _updateStaff(staff["staffId"], name, email);
+                setState(() {
+                  staff["name"] = name;
+                  staff["email"] = email;
+                });
+                Navigator.pop(context);
+              },
+              child: const Text("Update"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showAddDialog() {
+    TextEditingController nameController = TextEditingController();
+    TextEditingController emailController = TextEditingController();
+    TextEditingController departmentController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF23233A),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text("Add Staff",
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameController,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                    labelText: "Name",
+                    labelStyle: TextStyle(color: Colors.white)),
+              ),
+              TextField(
+                controller: emailController,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                    labelText: "Email",
+                    labelStyle: TextStyle(color: Colors.white)),
+              ),
+              TextField(
+                controller: departmentController,
+                style: const TextStyle(color: Colors.white),
+                decoration: const InputDecoration(
+                    labelText: "Department",
+                    labelStyle: TextStyle(color: Colors.white)),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cancel",
+                    style: TextStyle(color: Colors.white70))),
+            ElevatedButton(
+              onPressed: () {
+                if (nameController.text.isNotEmpty &&
+                    emailController.text.isNotEmpty &&
+                    departmentController.text.isNotEmpty) {
+                  _addStaff(nameController.text, emailController.text,
+                      departmentController.text);
+                  Navigator.pop(context);
+                }
+              },
+              child: const Text("Add"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
+    double screenWidth = MediaQuery.of(context).size.width;
+    bool isWideScreen = screenWidth > 600;
+
+    return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "Staff Management",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              ElevatedButton.icon(
-                onPressed: () {
-                  // Add new staff functionality
-                },
-                icon: const Icon(Icons.add),
-                label: const Text("Add Staff"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blueAccent,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: ListView.builder(
-              itemCount: 10,
-              itemBuilder: (context, index) {
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  color: Colors.white.withOpacity(0.1),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    side: BorderSide(color: Colors.white.withOpacity(0.2)),
-                  ),
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(16),
-                    leading: CircleAvatar(
-                      backgroundColor: Colors.blueAccent.withOpacity(0.2),
-                      child: Text(
-                        "S${index + 1}",
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    title: Text(
-                      "Staff Member ${index + 1}",
-                      style: const TextStyle(
+          // Header
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                  colors: [Colors.blueAccent, Colors.deepPurpleAccent]),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text("Staff Management",
+                    style: TextStyle(
                         color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 8),
-                        Text(
-                          "Department: ${index % 3 == 0 ? 'Computer Science' : index % 3 == 1 ? 'Computer Applications' : 'Physics'}",
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          "Email: staff${index + 1}@campus.edu",
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.7),
-                          ),
-                        ),
-                      ],
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit, color: Colors.blue),
-                          onPressed: () {
-                            // Edit staff
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () {
-                            // Delete staff
-                          },
-                        ),
-                      ],
-                    ),
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold)),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const WebViewPage(
+                                title: "Add Staff",
+                                url:
+                                    "https://staff-registration-grievpoint.netlify.app")));
+                  }, // Add functionality later
+                  icon: const Icon(Icons.add, color: Colors.white),
+                  label: const Text("Add Staff",
+                      style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.transparent,
+                    shadowColor: Colors.transparent,
                   ),
-                );
-              },
+                ),
+              ],
             ),
           ),
+          const SizedBox(height: 16),
+
+          isLoading
+              ? const Center(
+                  child: CircularProgressIndicator(color: Colors.white))
+              : staffMembers.isEmpty
+                  ? const Center(
+                      child: Text("No staff members found",
+                          style: TextStyle(color: Colors.white, fontSize: 18)))
+                  : Expanded(
+                      child: isWideScreen
+                          ? GridView.builder(
+                              itemCount: staffMembers.length,
+                              gridDelegate:
+                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                childAspectRatio: 3.5,
+                                mainAxisSpacing: 12,
+                                crossAxisSpacing: 12,
+                              ),
+                              itemBuilder: (context, index) =>
+                                  _buildStaffCard(staffMembers[index]),
+                            )
+                          : ListView.builder(
+                              itemCount: staffMembers.length,
+                              itemBuilder: (context, index) {
+                                return Column(
+                                  children: [
+                                    _buildStaffCard(staffMembers[
+                                        index]), // Your card widget
+                                    const SizedBox(
+                                        height:
+                                            12), // Adds spacing between cards
+                                  ],
+                                );
+                              }),
+                    ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStaffCard(Map<String, dynamic> staff) {
+    IconData genderIcon =
+        staff["gender"] == "male" ? Icons.person : Icons.person_rounded;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 6,
+              offset: const Offset(0, 3)),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(genderIcon, color: Colors.white, size: 28), // Gender-based icon
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                    "${staff["staffId"]} - ${staff["name"]}", // Staff ID included before name
+                    style: const TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
+                Text("Department: ${staff["department"]}",
+                    style: TextStyle(color: Colors.white.withOpacity(0.7))),
+                Text("Email: ${staff["email"]}",
+                    style: TextStyle(color: Colors.white.withOpacity(0.7))),
+              ],
+            ),
+          ),
+          IconButton(
+              icon: const Icon(Icons.edit, color: Colors.blue),
+              onPressed: () {}),
+          IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              onPressed: () {}),
         ],
       ),
     );

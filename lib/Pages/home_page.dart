@@ -3,6 +3,7 @@ import 'package:campus_connect/Pages/grievance_page.dart';
 import 'package:campus_connect/Pages/grievance_view.dart';
 import 'package:campus_connect/Pages/profile_page.dart';
 import 'package:campus_connect/Pages/student_grievance_status.dart';
+import 'package:campus_connect/Pages/user/circular_viewer.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
@@ -24,13 +25,34 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     String role = Hive.box('userBox').get('userData')['role'];
+    String userId = role == "staff"
+        ? Hive.box('userBox').get('userData')['staffId']
+        : Hive.box('userBox').get('userData')['rollNo'];
+    String depart = Hive.box('userBox').get('userData')['department'];
+    List<String> deptArr = Hive.box('userBox')
+        .get('userData')['departmentType']
+        .toString()
+        .split(' ');
 
     if (role == 'staff') {
-      pages = [const ChatBot(), const GrievanceList(), const ProfilePage()];
-      pageTitles = ["Chat Assistant", "Assigned Grievances", "Profile"];
+      pages = [
+        const ChatBot(),
+        const GrievanceList(),
+        CircularDisplayWidget(
+          role: "staff",
+          filterRole: "Teaching Staff Only",
+          userId: userId,
+          department: depart,
+          type: deptArr[1],
+          level: deptArr[0],
+        ),
+        const ProfilePage()
+      ];
+      pageTitles = ["Help Desk", "Assigned Grievances", "Circulars", "Profile"];
       pageIcons = [
         Icons.chat_bubble_outline,
         Icons.assignment_outlined,
+        Icons.announcement_outlined,
         Icons.person_outline
       ];
 
@@ -38,12 +60,17 @@ class _HomePageState extends State<HomePage> {
         BottomNavigationBarItem(
           icon: Icon(Icons.chat_bubble_outline),
           activeIcon: Icon(Icons.chat_bubble),
-          label: "Chat",
+          label: "Ask",
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.assignment_outlined),
           activeIcon: Icon(Icons.assignment),
           label: "Grievances",
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.announcement_outlined),
+          activeIcon: Icon(Icons.announcement),
+          label: "Circulars",
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person_outline),
@@ -55,18 +82,27 @@ class _HomePageState extends State<HomePage> {
       pages = [
         const ChatBot(),
         const GrievancePage(),
+        CircularDisplayWidget(
+            role: "student",
+            filterRole: "Students Only",
+            userId: userId,
+            department: depart,
+            type: deptArr[1],
+            level: deptArr[0]),
         const StudentGrievanceStatus(),
         const ProfilePage()
       ];
       pageTitles = [
-        "Chat Assistant",
+        "Help Desk",
         "Raise Grievance",
+        "Circulars",
         "Grievance Status",
         "Profile"
       ];
       pageIcons = [
         Icons.chat_bubble_outline,
         Icons.add_comment_outlined,
+        Icons.announcement_outlined,
         Icons.assignment_turned_in_outlined,
         Icons.person_outline
       ];
@@ -75,12 +111,17 @@ class _HomePageState extends State<HomePage> {
         BottomNavigationBarItem(
           icon: Icon(Icons.chat_bubble_outline),
           activeIcon: Icon(Icons.chat_bubble),
-          label: "Chat",
+          label: "Ask",
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.add_comment_outlined),
           activeIcon: Icon(Icons.add_comment),
           label: "Raise Issue",
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.announcement_outlined),
+          activeIcon: Icon(Icons.announcement),
+          label: "Circulars",
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.assignment_turned_in_outlined),

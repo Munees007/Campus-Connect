@@ -180,39 +180,43 @@ class _GrievancePageState extends State<GrievancePage> {
           builder: (BuildContext context) {
             List<String> tempSelection = List.from(selectedStaff);
 
-            return AlertDialog(
-              title: const Text("Select Staff"),
-              content: SizedBox(
-                width: double.maxFinite,
-                child: ListView(
-                  shrinkWrap: true,
-                  children: staffList.map((staff) {
-                    return CheckboxListTile(
-                      title: Text(staff['name']!),
-                      value: tempSelection.contains(staff['id']),
-                      onChanged: (bool? selected) {
-                        setState(() {
-                          if (selected == true) {
-                            tempSelection.add(staff['id']!);
-                          } else {
-                            tempSelection.remove(staff['id']!);
-                          }
-                        });
-                      },
-                    );
-                  }).toList(),
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text("Cancel"),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, tempSelection),
-                  child: const Text("OK"),
-                ),
-              ],
+            return StatefulBuilder(
+              builder: (BuildContext context, StateSetter setState) {
+                return AlertDialog(
+                  title: const Text("Select Staff"),
+                  content: SizedBox(
+                    width: double.maxFinite,
+                    child: ListView(
+                      shrinkWrap: true,
+                      children: staffList.map((staff) {
+                        return CheckboxListTile(
+                          title: Text(staff['name']!),
+                          value: tempSelection.contains(staff['id']),
+                          onChanged: (bool? isChecked) {
+                            setState(() {
+                              if (isChecked == true) {
+                                tempSelection.add(staff['id']!);
+                              } else {
+                                tempSelection.remove(staff['id']!);
+                              }
+                            });
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("Cancel"),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, tempSelection),
+                      child: const Text("OK"),
+                    ),
+                  ],
+                );
+              },
             );
           },
         );

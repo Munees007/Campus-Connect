@@ -29,7 +29,7 @@ class CustomDropdown extends StatelessWidget {
             borderSide: const BorderSide(color: Colors.black, width: 2),
             borderRadius: BorderRadius.circular(50),
           ),
-          contentPadding: const EdgeInsets.all(15),
+          contentPadding: const EdgeInsets.all(5),
           focusedBorder: OutlineInputBorder(
             gapPadding: 10,
             borderSide: const BorderSide(color: Colors.black, width: 2),

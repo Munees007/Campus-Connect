@@ -1,3 +1,4 @@
+import 'package:campus_connect/Components/toast_message.dart';
 import 'package:campus_connect/Pages/admin_home_page.dart';
 import 'package:campus_connect/Pages/home_page.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -28,12 +29,20 @@ Future<void> loginUser(
           await Hive.box('UserBox').put("isLogin", true);
           await Hive.box('UserBox').put("userData", userData);
           print(userData['staffId'] == "ADMIN");
+
           if (userData['staffId'] == "ADMIN") {
+            ToastManager().showToast(
+                context: context,
+                message: "Login Successful",
+                type: ToastType.info);
             Navigator.pushReplacement(context,
                 MaterialPageRoute(builder: (context) => const AdminHomePage()));
             return;
           }
-
+          ToastManager().showToast(
+              context: context,
+              message: "Login Successful",
+              type: ToastType.info);
           Navigator.pushReplacement(context,
               MaterialPageRoute(builder: (context) => const HomePage()));
           return;
@@ -41,6 +50,7 @@ Future<void> loginUser(
       }
     }
   }
-
+  ToastManager().showToast(
+      context: context, message: "Invalid Credentials.", type: ToastType.error);
   print("❌ Invalid credentials. Please try again.");
 }
