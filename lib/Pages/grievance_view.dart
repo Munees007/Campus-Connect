@@ -270,48 +270,45 @@ class GrievanceList extends StatelessWidget {
                                                 ),
                                               ),
 
-                                            const SizedBox(width: 8),
-
                                             // Replies count
-                                            if (grievance.value['replies'] !=
-                                                null)
-                                              Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                  horizontal: 10,
-                                                  vertical: 6,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.greenAccent
-                                                      .withOpacity(0.2),
-                                                  borderRadius:
-                                                      BorderRadius.circular(10),
-                                                  border: Border.all(
-                                                    color: Colors.greenAccent
-                                                        .withOpacity(0.3),
-                                                  ),
-                                                ),
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.comment,
-                                                      size: 14,
-                                                      color: Colors.white
-                                                          .withOpacity(0.9),
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      "${(grievance.value['replies'] as Map).length}",
-                                                      style: const TextStyle(
-                                                        fontSize: 12,
-                                                        color: Colors.white,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
                                           ],
                                         ),
+                                        const SizedBox(height: 8),
+                                        if (grievance.value['replies'] != null)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 10,
+                                              vertical: 6,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: Colors.greenAccent
+                                                  .withOpacity(0.2),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                              border: Border.all(
+                                                color: Colors.greenAccent
+                                                    .withOpacity(0.3),
+                                              ),
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.comment,
+                                                  size: 14,
+                                                  color: Colors.white
+                                                      .withOpacity(0.9),
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  "${(grievance.value['replies'] as Map).length}",
+                                                  style: const TextStyle(
+                                                    fontSize: 12,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
                                       ],
                                     ),
                                   ),

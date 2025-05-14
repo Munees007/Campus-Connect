@@ -174,9 +174,17 @@ class _ManageStudentsByStaffState extends State<ManageStudentsByStaff> {
       final name = student['name'].toString().toLowerCase();
       final email = student['email'].toString().toLowerCase();
       final rollNo = student['rollNo'].toString().toLowerCase();
+      final department = student['department'].toString().toLowerCase();
+      List<String> deptArr =
+          student['departmentType'].toString().toLowerCase().split(' ');
+      final level = deptArr[0];
+      final type = deptArr[1];
       return name.contains(searchQuery) ||
           email.contains(searchQuery) ||
-          rollNo.contains(searchQuery);
+          rollNo.contains(searchQuery) ||
+          department.contains(searchQuery) ||
+          level.contains(searchQuery) ||
+          type.contains(searchQuery);
     }).toList();
 
     return Padding(

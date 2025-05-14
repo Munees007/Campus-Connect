@@ -52,12 +52,11 @@ class _GrievanceDetailPageState extends State<GrievanceDetailPage> {
     });
 
     _replyController.clear();
-    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    Map<dynamic, dynamic>? replies = widget.grievanceData['replies'];
+    // Map<dynamic, dynamic>? replies = widget.grievanceData['replies'];
 
     return Scaffold(
       appBar: AppBar(
@@ -85,7 +84,7 @@ class _GrievanceDetailPageState extends State<GrievanceDetailPage> {
             children: [
               _buildGrievanceDetails(),
               const SizedBox(height: 10),
-              _buildRepliesSection(replies),
+              _buildRepliesSection(),
               _buildReplyInput(),
             ],
           ),
@@ -134,20 +133,42 @@ class _GrievanceDetailPageState extends State<GrievanceDetailPage> {
     );
   }
 
-  Widget _buildRepliesSection(Map<dynamic, dynamic>? replies) {
+  Widget _buildRepliesSection() {
     return Expanded(
-      child: replies != null && replies.isNotEmpty
-          ? ListView(
-              children: replies.entries
-                  .map((reply) => _buildReplyCard(reply))
-                  .toList(),
-            )
-          : const Center(
+      child: StreamBuilder<DatabaseEvent>(
+        stream: FirebaseDatabase.instance
+            .ref("grievances/${widget.grievanceId}/replies")
+            .onValue,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(
+              child: CircularProgressIndicator(color: Colors.white),
+            );
+          }
+
+          if (!snapshot.hasData || snapshot.data?.snapshot.value == null) {
+            return const Center(
               child: Text(
                 "No replies yet.",
                 style: TextStyle(fontSize: 18, color: Colors.white70),
               ),
-            ),
+            );
+          }
+
+          Map<dynamic, dynamic> replies =
+              snapshot.data!.snapshot.value as Map<dynamic, dynamic>;
+
+          List<MapEntry<dynamic, dynamic>> replyList = replies.entries.toList();
+
+          // Optional: Sort by timestamp if needed
+          replyList.sort((a, b) =>
+              (a.value['timestamp'] ?? 0).compareTo(b.value['timestamp'] ?? 0));
+
+          return ListView(
+            children: replyList.map((reply) => _buildReplyCard(reply)).toList(),
+          );
+        },
+      ),
     );
   }
 

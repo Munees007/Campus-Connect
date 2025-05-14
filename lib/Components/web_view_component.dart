@@ -33,8 +33,8 @@ class _WebViewPageState extends State<WebViewPage> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text(
-          "Circular Details",
+        title: Text(
+          widget.title,
           style: TextStyle(color: Colors.white),
         ),
         leading: IconButton(

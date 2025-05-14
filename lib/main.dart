@@ -1,3 +1,4 @@
+import 'package:campus_connect/Pages/admin_home_page.dart';
 import 'package:campus_connect/Pages/home_page.dart';
 import 'package:campus_connect/Pages/login_page.dart';
 import 'package:campus_connect/firebase_options.dart';
@@ -29,7 +30,12 @@ class _MainAppState extends State<MainApp> {
     bool isLogin = Hive.box('userBox').get('isLogin', defaultValue: false);
     if (isLogin) {
       print(Hive.box('userBox').get('userData'));
-      initPage = const HomePage();
+      final userData = Hive.box('userBox').get('userData');
+      if (userData['staffId'] == "ADMIN") {
+        initPage = const AdminHomePage();
+      } else {
+        initPage = const HomePage();
+      }
     } else {
       initPage = const LoginPage();
     }

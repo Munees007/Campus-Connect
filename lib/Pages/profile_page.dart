@@ -130,7 +130,10 @@ class _ProfilePageState extends State<ProfilePage> {
             border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
           ),
           child: Text(
-            (role == "student" ? year + " " : "") + role.toUpperCase(),
+            (role == "student" ? year + " " : "") +
+                ((role == "staff" && staff.staffId == "ADMIN")
+                    ? "PRINCIPAL"
+                    : role.toUpperCase()),
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w500,
