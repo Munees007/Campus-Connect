@@ -14,6 +14,23 @@ class _ProfilePageState extends State<ProfilePage> {
   String role = "";
   late Staff staff;
   late Student student;
+  late String year;
+  String getStudentYear(int joinedYear) {
+    final now = DateTime.now();
+    int currentYear = now.year;
+
+    // If current month is before June, academic year hasn’t started yet
+    if (now.month < 6) {
+      currentYear -= 1;
+    }
+
+    int diff = currentYear - joinedYear;
+
+    if (diff == 0) return "I YEAR";
+    if (diff == 1) return "II YEAR";
+    if (diff == 2) return "III YEAR";
+    return "ALUMNI";
+  }
 
   @override
   void initState() {
@@ -24,6 +41,7 @@ class _ProfilePageState extends State<ProfilePage> {
       staff = Staff.fromMap(userBox);
     } else {
       student = Student.fromMap(userBox);
+      year = getStudentYear(student.joinedYear);
     }
   }
 
@@ -112,7 +130,7 @@ class _ProfilePageState extends State<ProfilePage> {
             border: Border.all(color: Colors.blueAccent.withOpacity(0.3)),
           ),
           child: Text(
-            role.toUpperCase(),
+            (role == "student" ? year + " " : "") + role.toUpperCase(),
             style: const TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w500,

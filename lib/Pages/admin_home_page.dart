@@ -2,7 +2,7 @@ import 'package:campus_connect/Pages/chat_bot.dart';
 import 'package:campus_connect/Pages/admin/manage_staff.dart';
 import 'package:campus_connect/Pages/admin/manage_students.dart';
 import 'package:campus_connect/Pages/admin/manage_circulars.dart';
-import 'package:campus_connect/Pages/grievance_page.dart';
+import 'package:campus_connect/Pages/grievance_view.dart';
 import 'package:campus_connect/Pages/profile_page.dart';
 import 'package:flutter/material.dart';
 
@@ -27,7 +27,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
     // Initialize admin pages
     pages = [
       const ChatBot(),
-      const GrievancePage(),
+      const GrievanceList(),
       const ManageStaff(),
       const ManageStudents(),
       const ManageCirculars(),

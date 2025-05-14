@@ -4,6 +4,7 @@ import 'package:campus_connect/Pages/grievance_view.dart';
 import 'package:campus_connect/Pages/profile_page.dart';
 import 'package:campus_connect/Pages/student_grievance_status.dart';
 import 'package:campus_connect/Pages/user/circular_viewer.dart';
+import 'package:campus_connect/Pages/user/manage_students_by_staff.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 
@@ -33,7 +34,8 @@ class _HomePageState extends State<HomePage> {
         .get('userData')['departmentType']
         .toString()
         .split(' ');
-
+    String departmentType =
+        Hive.box('userBox').get('userData')['departmentType'];
     if (role == 'staff') {
       pages = [
         const ChatBot(),
@@ -46,13 +48,24 @@ class _HomePageState extends State<HomePage> {
           type: deptArr[1],
           level: deptArr[0],
         ),
+        ManageStudentsByStaff(
+          department: depart,
+          departmentType: departmentType,
+        ),
         const ProfilePage()
       ];
-      pageTitles = ["Help Desk", "Assigned Grievances", "Circulars", "Profile"];
+      pageTitles = [
+        "Help Desk",
+        "Assigned Grievances",
+        "Circulars",
+        "Manage Students",
+        "Profile"
+      ];
       pageIcons = [
         Icons.chat_bubble_outline,
         Icons.assignment_outlined,
         Icons.announcement_outlined,
+        Icons.school_outlined,
         Icons.person_outline
       ];
 
@@ -71,6 +84,11 @@ class _HomePageState extends State<HomePage> {
           icon: Icon(Icons.announcement_outlined),
           activeIcon: Icon(Icons.announcement),
           label: "Circulars",
+        ),
+        BottomNavigationBarItem(
+          icon: Icon(Icons.school_outlined),
+          activeIcon: Icon(Icons.school),
+          label: "Students",
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.person_outline),

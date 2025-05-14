@@ -1,3 +1,4 @@
+import 'package:campus_connect/Components/toast_message.dart';
 import 'package:campus_connect/Components/web_view_component.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -14,6 +15,8 @@ class _ManageStaffState extends State<ManageStaff> {
       FirebaseDatabase.instance.ref().child("users");
   List<Map<String, dynamic>> staffMembers = [];
   bool isLoading = true; // Track loading state
+  TextEditingController searchController = TextEditingController();
+  String searchQuery = '';
 
   @override
   void initState() {
@@ -29,6 +32,7 @@ class _ManageStaffState extends State<ManageStaff> {
         isLoading = false;
         staffMembers = data != null
             ? data.entries
+                .where((entry) => (entry.value as Map)['staffId'] != 'ADMIN')
                 .map((entry) => Map<String, dynamic>.from(entry.value as Map))
                 .toList()
             : [];
@@ -91,6 +95,11 @@ class _ManageStaffState extends State<ManageStaff> {
   }
 
   void _updateStaff(String staffId, String name, String email) {
+    if (staffId.isEmpty || name.isEmpty || email.isEmpty) {
+      ToastManager().showToast(
+          context: context, message: "Invalid Data", type: ToastType.warning);
+      return;
+    }
     _database.orderByChild("staffId").equalTo(staffId).once().then((event) {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
 
@@ -120,6 +129,12 @@ class _ManageStaffState extends State<ManageStaff> {
             ),
           );
         });
+      } else {
+        ToastManager().showToast(
+            context: context,
+            message: "Something Went Wrong",
+            type: ToastType.error);
+        return;
       }
     });
   }
@@ -251,6 +266,14 @@ class _ManageStaffState extends State<ManageStaff> {
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     bool isWideScreen = screenWidth > 600;
+    final filteredStaffs = staffMembers.where((student) {
+      final name = student['name'].toString().toLowerCase();
+      final email = student['email'].toString().toLowerCase();
+      final rollNo = student['staffId'].toString().toLowerCase();
+      return name.contains(searchQuery) ||
+          email.contains(searchQuery) ||
+          rollNo.contains(searchQuery);
+    }).toList();
 
     return Padding(
       padding: const EdgeInsets.all(16),
@@ -335,17 +358,42 @@ class _ManageStaffState extends State<ManageStaff> {
           ),
           const SizedBox(height: 16),
 
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
+            child: TextField(
+              controller: searchController,
+              decoration: InputDecoration(
+                hintText: 'Search by name, email, or Staff Id',
+                hintStyle: const TextStyle(color: Colors.white54),
+                prefixIcon: const Icon(Icons.search, color: Colors.white),
+                filled: true,
+                fillColor: const Color(0xFF23233A),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              style: const TextStyle(color: Colors.white),
+              onChanged: (value) {
+                setState(() {
+                  searchQuery = value.toLowerCase();
+                });
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+
           isLoading
               ? const Center(
                   child: CircularProgressIndicator(color: Colors.white))
-              : staffMembers.isEmpty
+              : filteredStaffs.isEmpty
                   ? const Center(
                       child: Text("No staff members found",
                           style: TextStyle(color: Colors.white, fontSize: 18)))
                   : Expanded(
                       child: isWideScreen
                           ? GridView.builder(
-                              itemCount: staffMembers.length,
+                              itemCount: filteredStaffs.length,
                               gridDelegate:
                                   const SliverGridDelegateWithFixedCrossAxisCount(
                                 crossAxisCount: 2,
@@ -354,14 +402,14 @@ class _ManageStaffState extends State<ManageStaff> {
                                 crossAxisSpacing: 12,
                               ),
                               itemBuilder: (context, index) =>
-                                  _buildStaffCard(staffMembers[index]),
+                                  _buildStaffCard(filteredStaffs[index]),
                             )
                           : ListView.builder(
-                              itemCount: staffMembers.length,
+                              itemCount: filteredStaffs.length,
                               itemBuilder: (context, index) {
                                 return Column(
                                   children: [
-                                    _buildStaffCard(staffMembers[
+                                    _buildStaffCard(filteredStaffs[
                                         index]), // Your card widget
                                     const SizedBox(
                                         height:

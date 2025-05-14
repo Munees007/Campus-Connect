@@ -1,15 +1,16 @@
-import 'package:campus_connect/Components/web_view_component.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
 
-class ManageStudents extends StatefulWidget {
-  const ManageStudents({super.key});
+class ManageStudentsByStaff extends StatefulWidget {
+  final String department, departmentType;
+  const ManageStudentsByStaff(
+      {super.key, required this.department, required this.departmentType});
 
   @override
-  State<ManageStudents> createState() => _ManageStudentsState();
+  State<ManageStudentsByStaff> createState() => _ManageStudentsByStaffState();
 }
 
-class _ManageStudentsState extends State<ManageStudents> {
+class _ManageStudentsByStaffState extends State<ManageStudentsByStaff> {
   final DatabaseReference _database =
       FirebaseDatabase.instance.ref().child("users");
   List<Map<String, dynamic>> students = [];
@@ -29,7 +30,11 @@ class _ManageStudentsState extends State<ManageStudents> {
 
       if (data != null) {
         setState(() {
-          students = data.entries.map((entry) {
+          students = data.entries.where((entry) {
+            final value = Map<String, dynamic>.from(entry.value as Map);
+            return value['department'] == widget.department &&
+                value['departmentType'] == widget.departmentType;
+          }).map((entry) {
             return Map<String, dynamic>.from(entry.value as Map);
           }).toList();
         });
@@ -197,26 +202,26 @@ class _ManageStudentsState extends State<ManageStudents> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const WebViewPage(
-                                        title: "Add Student",
-                                        url:
-                                            "https://student-registration-grievpoint.netlify.app")));
-                          },
-                          icon: const Icon(Icons.add),
-                          label: const Text("Add Student"),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
+                        // ElevatedButton.icon(
+                        //   onPressed: () {
+                        //     Navigator.push(
+                        //         context,
+                        //         MaterialPageRoute(
+                        //             builder: (context) => const WebViewPage(
+                        //                 title: "Add Student",
+                        //                 url:
+                        //                     "https://student-registration-grievpoint.netlify.app")));
+                        //   },
+                        //   icon: const Icon(Icons.add),
+                        //   label: const Text("Add Student"),
+                        //   style: ElevatedButton.styleFrom(
+                        //     backgroundColor: Colors.blueAccent,
+                        //     foregroundColor: Colors.white,
+                        //     shape: RoundedRectangleBorder(
+                        //       borderRadius: BorderRadius.circular(12),
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     )
                   : Row(
@@ -230,26 +235,26 @@ class _ManageStudentsState extends State<ManageStudents> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const WebViewPage(
-                                        title: "Add Student",
-                                        url:
-                                            "https://student-registration-grievpoint.netlify.app")));
-                          },
-                          icon: const Icon(Icons.add),
-                          label: const Text("Add Student"),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blueAccent,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
+                        // ElevatedButton.icon(
+                        //   onPressed: () {
+                        //     Navigator.push(
+                        //         context,
+                        //         MaterialPageRoute(
+                        //             builder: (context) => const WebViewPage(
+                        //                 title: "Add Student",
+                        //                 url:
+                        //                     "https://student-registration-grievpoint.netlify.app")));
+                        //   },
+                        //   icon: const Icon(Icons.add),
+                        //   label: const Text("Add Student"),
+                        //   style: ElevatedButton.styleFrom(
+                        //     backgroundColor: Colors.blueAccent,
+                        //     foregroundColor: Colors.white,
+                        //     shape: RoundedRectangleBorder(
+                        //       borderRadius: BorderRadius.circular(12),
+                        //     ),
+                        //   ),
+                        // ),
                       ],
                     );
             },
@@ -279,8 +284,8 @@ class _ManageStudentsState extends State<ManageStudents> {
               },
             ),
           ),
-          const SizedBox(height: 16),
 
+          const SizedBox(height: 16),
           isLoading
               ? const Center(
                   child: CircularProgressIndicator(color: Colors.white))
@@ -406,7 +411,7 @@ class _ManageStudentsState extends State<ManageStudents> {
             ElevatedButton(
               onPressed: () {
                 // Implement delete functionality
-                Navigator.of(context).pop();
+                Navigator.pop(context);
                 _deleteStudent(rollNo);
               },
               style: ElevatedButton.styleFrom(
